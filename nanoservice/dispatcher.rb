@@ -26,32 +26,33 @@ module Nanoservice
       send message
     end
 
-    def register(
-      event_spec: @default_event_spec,
-      name: nil,
-      service: nil,
-      thread_count: 1,
-      &block
-    )
+    def register(arg, &block)
+      args = {
+        event_spec: @default_event_spec,
+        name: nil,
+        service: nil,
+        thread_count: 1,
+      }.merge arg.class.name == 'Hash' ? arg : { service: arg }
+
       if block_given?
         debug_message("register() block")
         service_ref = ServiceRef.new(
           debug: @debug,
           dispatcher: self,
-          event_spec: event_spec,
-          name: name,
-          thread_count: thread_count,
+          event_spec: args[:event_spec],
+          name: args[:name],
+          thread_count: args[:thread_count],
           &block 
         )
       else
-        debug_message("register() method/proc: #{service}")
+        debug_message("register() method/proc: #{args[:service]}")
         service_ref = ServiceRef.new(
           debug: @debug,
           dispatcher: self,
-          event_spec: event_spec,
-          name: name,
-          service: service,
-          thread_count: thread_count
+          event_spec: args[:event_spec],
+          name: args[:name],
+          service: args[:service],
+          thread_count: args[:thread_count]
         )
       end
       @services[service_ref.name] = service_ref
