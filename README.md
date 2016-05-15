@@ -1,5 +1,5 @@
 # nanoservice
-Simple multi-threaded nanoservice (SOA) framework for Ruby apps.
+Simple multi-threaded nanoservice/SOA (Service Oriented Architecture) framework for Ruby apps.
 
 ## What is a nanoservice?
 Hyperbole.  If a microservice uses language independent messaging and stand-alone services, then a nanoservice is an order of magnitude simpler.
@@ -17,23 +17,25 @@ A Message is what is received, routed and sent to the recipient Services.  A Mes
 The Dispatcher (Nanoservice::Dispatcher) is the brains of the operation.  Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate recipient Service(s) based on the EventSpec(s) supplied by the Service upon registering with the Dispatcher.
 
 ## What does an Event and an EventSpec look like?
-An Event is just a string.  In it's simplest form, an entire Event (and Message even) can be composed entirely of a simple string like `'shutdown'`, but typically a more descriptive form is used which seperates component fields of the Event with ::'s, like `'OwnerService::Action::Detail'`.
+An Event is just a string.  In it's simplest form, an entire Event (and Message even) can be composed entirely of a simple string like `'shutdown'`, but typically a more descriptive form is used which seperates component fields of the Event with `::`s, like `'OwnerService::Action::Detail'`.
 
-An EventSpec is (optionally) supplied by the Service when registering with the Dispatcher, and is used to filter which Events are received.  EventSpecs can be a simple string (like: `'shutdown'`), a string including wildcards (`'OwnerService::**'`), a Regexp, or an Array/Set of multiple Strings/Regexps.
+An EventSpec is (optionally) supplied by the Service when registering with the Dispatcher, and is used to filter which Events are received.  EventSpecs can be a simple string (like: `'shutdown'`), a string including wildcards (`'OwnerService::**'`), a Regexp, or even an Array/Set of multiple Strings/Regexps.
 
 ### Whats up with those wildcards?
 To simplify filtering, a EventSpec String can contain a `*` or a `**` wildcard.  A `*` wildcard matches just one field between `::` delimiters.  A `**` wildcard matches one or more.
 
 `'Service::*'` matches `'Service::Start'`, but not `'Service::Start::Now'`
+
 `'Service::**'` matches both `'Service::Start'` and `'Service::Start::Now'`
 
-## How do you register a Service?
-Easy - by calling the Nanoservice::Dispatcher#register method.  Here's a few self-explanatory examples.
+## How do you use it?
+It's easy.  Here's a few self-explanatory examples.
 
 ```ruby
-require_relative 'nano_soa'
+require_relative 'nanoservice'
 
 # Instantiate our Dispatcher and begin our monitoring thread.
+#
 dispatcher = Nanoservice::Dispatcher.new
 
 # Easiest way to register a service.  Default EventSpec receives all messages.
