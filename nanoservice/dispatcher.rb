@@ -33,28 +33,16 @@ module Nanoservice
         service: nil,
         thread_count: 1,
       }.merge arg.class.name == 'Hash' ? arg : { service: arg }
-
-      if block_given?
-        debug_message("register() block")
-        service_ref = ServiceRef.new(
-          debug: @debug,
-          dispatcher: self,
-          event_spec: args[:event_spec],
-          name: args[:name],
-          thread_count: args[:thread_count],
-          &block 
-        )
-      else
-        debug_message("register() method/proc: #{args[:service]}")
-        service_ref = ServiceRef.new(
-          debug: @debug,
-          dispatcher: self,
-          event_spec: args[:event_spec],
-          name: args[:name],
-          service: args[:service],
-          thread_count: args[:thread_count]
-        )
-      end
+      args[:service] = block.to_proc if block_given?
+      debug_message("register(#{args[:service]})")
+      service_ref = ServiceRef.new(
+        debug: @debug,
+        dispatcher: self,
+        event_spec: args[:event_spec],
+        name: args[:name],
+        service: args[:service],
+        thread_count: args[:thread_count]
+      )
       @services[service_ref.name] = service_ref
     end
 

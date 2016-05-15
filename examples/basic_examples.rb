@@ -16,7 +16,7 @@ dispatcher.register lambda { |event, payload|
 # Usually, you'll supply an EventSpec so you don't process unnecessary messages.
 #
 dispatcher.register(event_spec: 'OtherService::Message::*') do |event, payload|
-  puts "I received only events from OtherService, like #{event}"
+  puts "This block received only events from OtherService, like #{event}"
 end
 
 # If the return value of the Service hook is a String or a Hash with an :event 

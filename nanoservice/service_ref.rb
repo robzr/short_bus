@@ -12,13 +12,12 @@ module Nanoservice
       event_spec: nil,
       name: nil,
       service: nil, 
-      thread_count: 1,
-      &block
+      thread_count: 1
     )
       @debug = debug
       @dispatcher = dispatcher
       @event_spec = EventSpec.new event_spec
-      @service = block_given? ? block.to_proc : service
+      @service = service
       @thread_count = thread_count
       @name = name || @service.to_s
       @run_queue = Queue.new
