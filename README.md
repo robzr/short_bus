@@ -8,7 +8,7 @@ Hyperbole.  If a microservice uses language independent messaging and stand-alon
 Makes it simple to write multi-threaded, event-driven Ruby apps with an internal Service Oriented Architecture.  Nanoservice has no dependencies outside of the Ruby Core & Standard Libraries, and should work with JRuby.
 
 ## What are the components?
-A Service is an object which participates in the SOA.  It could be a Proc/Block or Method launched on demand to receive, process and optionally send messages, it could have dedicated threads sending messages, or both.  Usually, each Service exists in it's own Module and Class namespace (see examples).  Ideally, the only communication different Services have with eachother is through the Dispatcher.
+A Service is an object which participates in the SOA.  It could be a Proc/Block or Method launched on demand to receive, process and optionally send messages, it could have dedicated threads sending messages, or both.  Usually, each Service exists in it's own Module and Class namespace (see examples).  Ideally, the only communication different Services have with each other is through the Dispatcher.
 
 A Message is what is received, routed and sent to the recipient Services.  A Message is a simple hash composed of an event (a description of the message), and an optional payload object.
 
