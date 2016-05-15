@@ -1,8 +1,7 @@
-require 'observer'
 require 'pp'
 require 'set'
 
-module NanoSOA
+module Nanoservice
   class Dispatcher
     #include Observable
     DEFAULT_OPTIONS = { 

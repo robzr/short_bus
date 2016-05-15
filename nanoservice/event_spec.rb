@@ -1,7 +1,7 @@
 require 'pp'
 require 'set'
 
-module NanoSOA
+module Nanoservice
   class EventSpec
     attr_reader :specs
 

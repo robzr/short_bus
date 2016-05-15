@@ -2,7 +2,7 @@ require 'observer'
 require 'pp'
 require 'set'
 
-module NanoSOA
+module Nanoservice
   class ServiceRef
     attr_reader :name, :threads
 

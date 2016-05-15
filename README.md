@@ -1,11 +1,11 @@
-# NanoSOA
-Simple multithreaded nanoservice framework for Ruby apps
+# nanoservice
+Simple multi-threaded nanoservice (SOA) framework for Ruby apps.
 
 ## What is a nanoservice?
 Hyperbole.  If a microservice uses language independent messaging and stand-alone services, then a nanoservice is an order of magnitude simpler.
 
 ## So what does it do?
-Makes it simple to write multithreaded, event-driven Ruby apps with an internal Service Oriented Architecture.
+Makes it simple to write multi-threaded, event-driven Ruby apps with an internal Service Oriented Architecture.  Nanoservice has no dependencies outside of the Ruby Core & Standard Libraries, and should work with JRuby.
 
 ## What are the components?
 A Service is an object which participates in the SOA.  It could be a Proc/Block or Method launched on demand to receive, process and optionally send messages, it could have dedicated threads sending messages, or both.  Usually, each Service exists in it's own Module and Class namespace (see examples).  Ideally, the only communication different Services have with eachother is through the Dispatcher.
@@ -14,7 +14,7 @@ A Message is what is received, routed and sent to the recipient Services.  A Mes
 
 `Message = { event: 'example::event', payload: any_object }`
 
-The Dispatcher (NanoSOA::Dispatcher) is the brains of the operation.  Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate recipient Service(s) based on the EventSpec(s) supplied by the Service upon registering with the Dispatcher.
+The Dispatcher (Nanoservice::Dispatcher) is the brains of the operation.  Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate recipient Service(s) based on the EventSpec(s) supplied by the Service upon registering with the Dispatcher.
 
 ## What does an Event and an EventSpec look like?
 An Event is just a string.  In it's simplest form, an entire Event (and Message even) can be composed entirely of a simple string like `'shutdown'`, but typically a more descriptive form is used which seperates component fields of the Event with ::'s, like `'OwnerService::Action::Detail'`.
@@ -28,13 +28,13 @@ To simplify filtering, a EventSpec String can contain a `*` or a `**` wildcard. 
 `'Service::**'` matches both `'Service::Start'` and `'Service::Start::Now'`
 
 ## How do you register a Service?
-Easy - by calling the NanoSOA::Dispatcher#register method.  Here's a few self-explanatory examples.
+Easy - by calling the Nanoservice::Dispatcher#register method.  Here's a few self-explanatory examples.
 
 ```ruby
 require_relative 'nano_soa'
 
 # Instantiate our Dispatcher and begin our monitoring thread.
-dispatcher = NanoSOA::Dispatcher.new
+dispatcher = Nanoservice::Dispatcher.new
 
 # Easiest way to register a service.  Default EventSpec receives all messages.
 dispatcher.register(
