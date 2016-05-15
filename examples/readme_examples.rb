@@ -25,14 +25,6 @@ def bob(event, payload)
 end
 dispatcher.register(service: method(:bob), event_spec: '*::GoodMessage::**')
 
-# Instantiate a new object, allow it to process 5 messages simultaneously.
-# This Class will need to be written to appropriately handle multiple Threads.
-#dispatcher.register(
-#  event_spec: ['*::Commands::Shut*', '*::Commands::Stop*'],
-#  service: SomeModule::Cleaner.new.message_handler,
-#  thread_count: 5
-#)
-
 dispatcher << 'Joe::GoodMessage::hi, bob'
 
 dispatcher.send 'Random Event'

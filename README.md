@@ -11,21 +11,30 @@ Makes it simple to write multithreaded, event-driven Ruby apps with an internal 
 A Service is an object which participates in the SOA.  It could be a Proc/Block or Method launched on demand to receive, process and optionally send messages, it could have dedicated threads sending messages, or both.  Usually, each Service exists in it's own Module and Class namespace (see examples).  Ideally, the only communication different Services have with eachother is through the Dispatcher.
 
 A Message is what is received, routed and sent to the recipient Services.  A Message is a simple hash composed of an event (a description of the message), and an optional payload object.
-```Message = { event: 'example::event', payload: any_object }```
 
-NanoSOA::Dispatcher is the brains of the operation.  Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate recipient Service(s) based on the EventSpec supplied by the Service upon registering with the Dispatcher.
+`Message = { event: 'example::event', payload: any_object }`
+
+The Dispatcher (NanoSOA::Dispatcher) is the brains of the operation.  Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate recipient Service(s) based on the EventSpec(s) supplied by the Service upon registering with the Dispatcher.
 
 ## What does an Event and an EventSpec look like?
-An Event is a string.  In it's simplest form, an entire Event (and Message even) can be composed of a simple string, such as 'shutdown', although typically a more descriptive syntax is used which seperates component fields of the Event with ::'s, like 'OwnerService::Action::Detail'.  When a Service registers with the Dispatcher, one or more EventSpecs are supplied, which are used to filter which Events are received.  EventSpecs can be a simple string (like: 'shutdown'), a string including wildcards (like 'OwnerService::*::*', or the equivalent 'OwnerService::**'), a Regexp, or an Array/Set of any of those types.
+An Event is just a string.  In it's simplest form, an entire Event (and Message even) can be composed entirely of a simple string like `'shutdown'`, but typically a more descriptive form is used which seperates component fields of the Event with ::'s, like `'OwnerService::Action::Detail'`.
 
-## So how do you register a Service?
-Easy - by calling the NanoSOA::Dispatcher::register method.  Here's a few self-explanatory examples:
+An EventSpec is (optionally) supplied by the Service when registering with the Dispatcher, and is used to filter which Events are received.  EventSpecs can be a simple string (like: `'shutdown'`), a string including wildcards (`'OwnerService::**'`), a Regexp, or an Array/Set of multiple Strings/Regexps.
+
+### Whats up with those wildcards?
+To simplify filtering, a EventSpec String can contain a `*` or a `**` wildcard.  A `*` wildcard matches just one field between `::` delimiters.  A `**` wildcard matches one or more.
+
+`'Service::*'` matches `'Service::Start'`, but not `'Service::Start::Now'`
+`'Service::**'` matches both `'Service::Start'` and `'Service::Start::Now'`
+
+## How do you register a Service?
+Easy - by calling the NanoSOA::Dispatcher#register method.  Here's a few self-explanatory examples.
 
 ```ruby
 require_relative 'nano_soa'
 
 # Instantiate our Dispatcher and begin our monitoring thread.
-dispatcher = NanoSOA::Dispatcher.new(options: { debug: false })
+dispatcher = NanoSOA::Dispatcher.new
 
 # Easiest way to register a service.  Default EventSpec receives all messages.
 dispatcher.register(
