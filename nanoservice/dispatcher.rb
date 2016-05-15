@@ -3,7 +3,7 @@ require 'set'
 
 module Nanoservice
   class Dispatcher
-    #include Observable
+
     DEFAULT_OPTIONS = { 
       debug: false,
       default_event_spec: '**'
@@ -15,15 +15,12 @@ module Nanoservice
     def initialize(options: {})
      @options = DEFAULT_OPTIONS.merge options 
      @debug = @options[:debug]
-     @default_event_spec = options[:default_event_spec]
+     @default_event_spec = @options[:default_event_spec]
 
-     @services = {}
      @messages = Queue.new
-     @threads = { dispatcher: dispatch_loop }
-    end
+     @services = {}
 
-    def <<(message)
-      send message
+     @threads = { dispatcher: dispatch_loop }
     end
 
     def register(arg, &block)
@@ -33,9 +30,12 @@ module Nanoservice
         service: nil,
         thread_count: 1,
       }.merge arg.class.name == 'Hash' ? arg : { service: arg }
+
       args[:service] = block.to_proc if block_given?
+
       debug_message("register(#{args[:service]})")
-      service_ref = ServiceRef.new(
+
+      service_ref = Service.new(
         debug: @debug,
         dispatcher: self,
         event_spec: args[:event_spec],
@@ -43,15 +43,28 @@ module Nanoservice
         service: args[:service],
         thread_count: args[:thread_count]
       )
+
       @services[service_ref.name] = service_ref
     end
 
     def send(message, payload = nil)
-      if message.class.name == 'Hash'
+      case message.class.name
+      when 'Hash'
         @messages << message if message.has_key? :event
-      else
+      when 'String'
         @messages << { event: message, payload: payload }
+      else
+        raise ArgumentError => 'Invalid message class'
       end
+    end
+
+    alias_method :<<, :send
+
+    def unregister(name)
+      if @services.has_key? name
+        @services[name].kill_threads!
+        @services.delete name
+      end      
     end
     
     private
@@ -62,14 +75,12 @@ module Nanoservice
 
     def dispatch_loop
       Thread.new do
-        loop do
-          route_message @messages.shift
-        end
+        loop { route_message @messages.shift }
       end
     end
 
     def route_message(message)
-      debug_message "routing_message(#{message})"
+      debug_message "route_message(#{message})"
       @services.values.each do |service| 
         service.check(message[:event], message[:payload])
       end

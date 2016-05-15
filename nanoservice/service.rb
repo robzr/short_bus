@@ -3,7 +3,7 @@ require 'pp'
 require 'set'
 
 module Nanoservice
-  class ServiceRef
+  class Service
     attr_reader :name, :threads
 
     def initialize(
@@ -23,7 +23,7 @@ module Nanoservice
       @run_queue = Queue.new
       @run_count = 0
       @threads = {}
-      launch_threads
+      start
     end
     
     def check(event, payload)
@@ -33,6 +33,21 @@ module Nanoservice
       } if match event
     end
 
+    def start
+      while @threads.length < @thread_count
+        @threads[@threads.length + 1] = Thread.new do
+          loop { run_service @run_queue.shift }
+        end
+      end
+    end
+
+    def stop!
+      @threads.each do |index, thread|
+        thread.kill
+        @threads.delete index
+      end
+    end
+
     def match(event)
       @event_spec.match event
     end
@@ -40,18 +55,7 @@ module Nanoservice
     private
 
     def debug_message(message)
-      STDERR.puts "ServiceRef::#{message}" if @debug
-    end
-
-    def launch_threads
-      while @threads.length < @thread_count
-        @threads[@threads.length + 1] = Thread.new {
-          loop do
-            message = @run_queue.shift
-            run_service(message[:event], message[:payload])
-          end
-        }
-      end
+      STDERR.puts "Service::#{message}" if @debug
     end
 
     def maybe_send(message = nil)
@@ -64,11 +68,11 @@ module Nanoservice
       end
     end
 
-    def run_service(event, payload)
+    def run_service(message)
       @run_count += 1
       case @service.class.name
       when 'Method', 'Proc'
-        maybe_send @service.call(event, payload)
+        maybe_send @service.call(message[:event], message[:payload])
       else
         raise ArgumentError => "Unknown service type: #{@service.class.name}"
       end
