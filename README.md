@@ -29,38 +29,40 @@ To simplify filtering, a EventSpec String can contain a `*` or a `**` wildcard. 
 `'Service::**'` matches both `'Service::Start'` and `'Service::Start::Now'`
 
 ## How do you use it?
-It's easy.  Here's a few self-explanatory examples.
+It's easy.  Here's a self-explanatory example of a few Services that interact with each other.
 
 ```ruby
 require_relative 'nanoservice'
 
-# Instantiate our Dispatcher and begin our monitoring thread.
+# First, instantiate the Dispatcher and begin our monitoring thread.
 #
 dispatcher = Nanoservice::Dispatcher.new
 
-# Easiest way to register a service.  Default EventSpec receives all messages.
+# Now let's register a simple service.  The default EventSpec receives all messages.
 #
 dispatcher.register lambda { |event, payload|
-    puts "Lambda sez I receive *ALL* events, like this one: #{event}"
-  }
+  puts "Lambda sez I receive *ALL* events, like this one: #{event}"
+}
 
-# Usually, you'll want to supply an EventSpec.
+# Usually, you'll want to supply an EventSpec.  You can also register a Block.
 #
 dispatcher.register(event_spec: 'OtherService::Message::*') do |event, payload|
   puts "I received only events from OtherService"
 end
 
-# If the return value of the Service hook is a String or a Hash with an :event
-#   key, it will be sent back to the Dispatcher as a new message.
+# Or, you can register a Method.  If the return value of any Service hook is a 
+#   String or a Hash with an :event key, it will be sent back to the Dispatcher 
+#   as a new message.
 #
 def bob(event, payload)
-  puts "Bob is running!"
+  puts "Bob is running because he got the event #{event}"
   { event: "Bob::Reply", payload: "Hi, I love a good message." }
 end
 dispatcher.register(service: method(:bob), event_spec: '*::GoodMessage::**')
 
-# Instantiate a new object, allow it to process 5 messages simultaneously. This
-#   Class will need to be written to appropriately handle multiple Threads.
+# Here's a more complex (and probably typical) example.  We'll nnstantiate a new
+#   object, allow it to process 5 messages simultaneously. This Class will need 
+#   to be written to appropriately handle multiple Threads.
 #
 dispatcher.register(
   event_spec: ['*::Commands::Shut*', '*::Commands::Stop*'],
