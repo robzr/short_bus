@@ -7,6 +7,7 @@ module NanoSOA
     attr_reader :name, :threads
 
     def initialize(
+      debug: false,
       dispatcher: nil,
       event_spec: nil,
       name: nil,
@@ -14,6 +15,7 @@ module NanoSOA
       thread_count: 1,
       &block
     )
+      @debug = debug
       @dispatcher = dispatcher
       @event_spec = EventSpec.new event_spec
       @service = block_given? ? block.to_proc : service
@@ -38,6 +40,10 @@ module NanoSOA
 
     private
 
+    def debug_message(message)
+      STDERR.puts "ServiceRef::#{message}" if @debug
+    end
+
     def launch_threads
       while @threads.length < @thread_count
         @threads[@threads.length + 1] = Thread.new {
@@ -50,10 +56,19 @@ module NanoSOA
     end
 
     def maybe_send(message = nil)
-      if message.class.name == 'String'
-        dispatcher << message
-      elsif message.class.name == 'Hash'
-        dispatcher << message if message.has_key? :event
+      case message.class.name
+      when 'String'
+        debug_message "maybe_send(String: message)"
+        @dispatcher << message
+      when 'Hash'
+        if message.has_key? :event
+          debug_message "maybe_send(Hash: message) sending #{message}"
+          @dispatcher.send message
+        else
+          debug_message "maybe_send(Hash: message) not-sending #{message}"
+        end
+      else
+        debug_message "maybe_send not sending (class: #{message.class.name})"
       end
     end
 

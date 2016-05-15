@@ -21,12 +21,18 @@ An Event is a string.  In it's simplest form, an entire Event (and Message even)
 ## So how do you register a Service?
 Easy - by calling the NanoSOA::Dispatcher::register method.  Here's a few self-explanatory examples:
 
-```
-# Instantiate our Dispatcher and begin our monitoring thread.
-dispatcher = NanoSOA::Dispatcher.new
+```ruby
+require_relative 'nano_soa'
 
-# Easiest way to register a service.  The default EventSpec receives all messages.
-dispatcher << lambda { |event, payload| puts "I receive *ALL* events, like this one: #{event}" }
+# Instantiate our Dispatcher and begin our monitoring thread.
+dispatcher = NanoSOA::Dispatcher.new(options: { debug: false })
+
+# Easiest way to register a service.  Default EventSpec receives all messages.
+dispatcher.register(
+  service: lambda { |event, payload|
+    puts "Lambda sez I receive *ALL* events, like this one: #{event}"
+  }
+)
 
 # Usually, you'll want to supply an EventSpec.
 dispatcher.register(event_spec: 'OtherService::Message::*') do |event, payload|
@@ -36,6 +42,7 @@ end
 # If the return value of the Service hook is a String or a Hash with
 # an :event key, it will be sent back to the Dispatcher as a new message.
 def bob(event, payload)
+  puts "Bob is running!"
   { event: "Bob::Reply", payload: "Hi, I love a good message." }
 end
 dispatcher.register(service: method(:bob), event_spec: '*::GoodMessage::**')
@@ -47,6 +54,12 @@ dispatcher.register(
   service: SomeModule::Cleaner.new.message_handler,
   thread_count: 5
 )
+
+dispatcher << 'Joe::GoodMessage::hi, bob'
+
+dispatcher.send 'Random Event'
+
+dispatcher << { event: 'Steve::GoodMessage::Your Uncle', payload: 'your_uncle' }
 
 sleep
 ```

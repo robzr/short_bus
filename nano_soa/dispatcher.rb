@@ -5,22 +5,26 @@ require 'set'
 module NanoSOA
   class Dispatcher
     #include Observable
-    THREAD_THROTTLE = 0.005
+    DEFAULT_OPTIONS = { 
+      debug: false,
+      default_event_spec: '**'
+    }
 
     attr_reader :services, :threads
-    attr_accessor :default_event_spec
+    attr_accessor :debug, :default_event_spec
 
-    def initialize(
-      options: {}
-    )
-     @default_event_spec = options[:default_event_spec] || '**'
+    def initialize(options: {})
+     @options = DEFAULT_OPTIONS.merge options 
+     @debug = @options[:debug]
+     @default_event_spec = options[:default_event_spec]
+
      @services = {}
      @messages = Queue.new
      @threads = { dispatcher: dispatch_loop }
     end
 
     def <<(message)
-      self.send message
+      send message
     end
 
     def register(
@@ -31,14 +35,20 @@ module NanoSOA
       &block
     )
       if block_given?
+        debug_message("register() block")
         service_ref = ServiceRef.new(
+          debug: @debug,
+          dispatcher: self,
           event_spec: event_spec,
           name: name,
           thread_count: thread_count,
           &block 
         )
       else
+        debug_message("register() method/proc: #{service}")
         service_ref = ServiceRef.new(
+          debug: @debug,
+          dispatcher: self,
           event_spec: event_spec,
           name: name,
           service: service,
@@ -50,13 +60,17 @@ module NanoSOA
 
     def send(message, payload = nil)
       if message.class.name == 'Hash'
-        @messages << message
+        @messages << message if message.has_key? :event
       else
-        @messages << { message: message, payload: payload }
+        @messages << { event: message, payload: payload }
       end
     end
     
     private
+
+    def debug_message(message)
+      STDERR.puts "Dispatcher::#{message}" if @debug
+    end
 
     def dispatch_loop
       Thread.new do
@@ -67,8 +81,9 @@ module NanoSOA
     end
 
     def route_message(message)
+      debug_message "routing_message(#{message})"
       @services.values.each do |service| 
-        service.check(message[:message], message[:payload])
+        service.check(message[:event], message[:payload])
       end
     end
   end
