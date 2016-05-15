@@ -55,19 +55,12 @@ module Nanoservice
     end
 
     def maybe_send(message = nil)
+      debug_message "maybe_send(#{message})"
       case message.class.name
       when 'String'
-        debug_message "maybe_send(String: message)"
         @dispatcher << message
       when 'Hash'
-        if message.has_key? :event
-          debug_message "maybe_send(Hash: message) sending #{message}"
-          @dispatcher.send message
-        else
-          debug_message "maybe_send(Hash: message) not-sending #{message}"
-        end
-      else
-        debug_message "maybe_send not sending (class: #{message.class.name})"
+        @dispatcher.send message if message.has_key? :event
       end
     end
 
