@@ -2,7 +2,7 @@
 Simple multi-threaded nanoservice/SOA (Service Oriented Architecture) framework for Ruby apps.
 
 ## What is a nanoservice?
-Hyperbole.  If a microservice uses language independent messaging and stand-alone services, then a nanoservice is an order of magnitude simpler.
+Hyperbole.  If a microservice uses language independent messaging and stand-alone services, then a nanoservice is an order of magnitude simpler. In it's simplest form, a nanoservice is simply a thread launched in response to a subscribed event.
 
 ## So what does it do?
 Makes it simple to write multi-threaded, event-driven Ruby apps with an internal Service Oriented Architecture.  Nanoservice has no dependencies outside of the Ruby Core & Standard Libraries, and should work with JRuby.
