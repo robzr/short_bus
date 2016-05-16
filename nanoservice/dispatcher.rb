@@ -48,11 +48,14 @@ module Nanoservice
     end
 
     def send(message, payload = nil)
-      case message.class.name
-      when 'Hash'
-        @messages << message if message.has_key? :event
-      when 'String'
-        @messages << { event: message, payload: payload }
+      if message.class.name == 'String'
+        queue = Queue.new
+        @messages << { event: message, payload: payload, queue: queue }
+        queue
+      elsif message.class.name == 'Hash' && message.has_key?(:event)
+        message.merge!({ queue: Queue.new }) unless message.has_key?(:queue)
+        @messages << message
+        message[:queue]
       else
         raise ArgumentError => 'Invalid message class'
       end
@@ -62,7 +65,7 @@ module Nanoservice
 
     def unregister(name)
       if @services.has_key? name
-        @services[name].kill_threads!
+        @services[name].stop
         @services.delete name
       end      
     end
@@ -82,7 +85,7 @@ module Nanoservice
     def route_message(message)
       debug_message "route_message(#{message})"
       @services.values.each do |service| 
-        service.check(message[:event], message[:payload])
+        service.check message
       end
     end
   end

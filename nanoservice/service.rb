@@ -26,11 +26,8 @@ module Nanoservice
       start
     end
     
-    def check(event, payload)
-      @run_queue << { 
-        event: event,
-        payload: payload
-      } if match event
+    def check(message)
+      @run_queue << message if match message[:event]
     end
 
     def start
@@ -41,7 +38,7 @@ module Nanoservice
       end
     end
 
-    def stop!
+    def stop
       @threads.each do |index, thread|
         thread.kill
         @threads.delete index
@@ -72,7 +69,15 @@ module Nanoservice
       @run_count += 1
       case @service.class.name
       when 'Method', 'Proc'
-        maybe_send @service.call(message[:event], message[:payload])
+        if @service.arity >= 3 || @service.arity < 0
+          maybe_send @service.call(message[:event], message[:payload], message[:queue])
+        elsif @service.arity == 2
+          maybe_send @service.call(message[:event], message[:payload])
+        elsif @service.arity == 1
+          maybe_send @service.call(message[:event])
+        else
+          maybe_send @service.call
+        end
       else
         raise ArgumentError => "Unknown service type: #{@service.class.name}"
       end
