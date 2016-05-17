@@ -1,13 +1,22 @@
 # Nanoservice
-Simple multi-threaded nanoservice/SOA (Service Oriented Architecture) framework for Ruby apps.
+Simple multi-threaded process dispatcher for Ruby apps.
+
+## What does it do?
+
+The goal is to provide a minimal, lightweight message dispatcher/service api, providing multithreaded event publishing and subscription for Ruby (Lambdas, Methods, Classes) 
+
+TODO: allow running as a simple queue
+TODO: object instantiation for callback if passed a class
+TODO: make a mixin overlay
+TODO: make message a Class (inherit Queue), Array (for payload), String (for name)
+TODO: use IPv6 : format for events
+
+Nanoservice has no dependencies outside of the Ruby Core & Standard Libraries, and should work with JRuby.
 
 ## What is a nanoservice?
 Hyperbole.  If a microservice uses language independent messaging and stand-alone services, then a nanoservice is an order of magnitude simpler.
 
-In it's simplest form, a nanoservice is simply a thread launched in response to a subscribed event.
-
-## So what does it do?
-Nanoservice makes it simple to write multi-threaded, event-driven Ruby apps with an internal Service Oriented Architecture.  Nanoservice has no dependencies outside of the Ruby Core & Standard Libraries, and should work with JRuby (TODO: test).
+In it's simplest form, a nanoservice is simply an object called in response to a subscribed event.
 
 ## What are the components?
 A Service is an object which participates in the SOA.  It could be a Lambda, Block or Method launched on demand to receive, process and optionally send messages; it could have dedicated threads sending messages, or both.  Usually, each Service exists in it's own Module and Class namespace, but that's up to you. Ideally, the only communication different Services have with each other is through the Dispatcher, with the exception of passed Queues (see passed Queues section below).
