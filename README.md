@@ -5,21 +5,21 @@ Simple multi-threaded process dispatcher for Ruby apps.
 
 The goal is to provide a minimal, lightweight message dispatcher/service api, providing multithreaded event publishing and subscription for Ruby (Lambdas, Methods, Classes) 
 
-TODO: allow running as a simple queue
-TODO: object instantiation for callback if passed a class
-TODO: make a mixin overlay
-TODO: make message a Class (inherit Queue), Array (for payload), String (for name)
-TODO: use IPv6 : format for events
+- TODO: allow running as a simple queue
+- TODO: object instantiation for callback if passed a class
+- TODO: make a mixin class for easier integration
+- TODO: make Message a Class (inherit Queue), Array (for payload), String (for name)
+- TODO: use IPv6 : format for events
 
 Nanoservice has no dependencies outside of the Ruby Core & Standard Libraries, and should work with JRuby.
 
 ## What is a nanoservice?
-Hyperbole.  If a microservice uses language independent messaging and stand-alone services, then a nanoservice is an order of magnitude simpler.
+If a microservice uses language independent messaging and stand-alone services, then a nanoservice is an order of magnitude simpler.
 
-In it's simplest form, a nanoservice is simply an object called in response to a subscribed event.
+In it's simplest form, a nanoservice is simply a callback triggered on by a message received by the Dispatcher.
 
 ## What are the components?
-A Service is an object which participates in the SOA.  It could be a Lambda, Block or Method launched on demand to receive, process and optionally send messages; it could have dedicated threads sending messages, or both.  Usually, each Service exists in it's own Module and Class namespace, but that's up to you. Ideally, the only communication different Services have with each other is through the Dispatcher, with the exception of passed Queues (see passed Queues section below).
+A Service is an object which participates in the SOA.  It could be simply a Lambda, Block or Method launched on demand to receive and process (and optionally send) messages; it could have dedicated threads sending messages, or both.  Usually, each Service exists in it's own Module and Class namespace, but that's up to you. Ideally, the only communication different Services have with each other is through the Dispatcher, with the exception of passed Queues (see passed Queues section below).
 
 A Message is what is received, routed and sent to the recipient Services.  A Message is a simple hash composed of an event (a description of the message), an optional payload object, and an optional passed Queue.
 
