@@ -19,7 +19,7 @@ A Message is what is received, routed and sent to the recipient Services.  A Mes
 The Dispatcher (Nanoservice::Dispatcher) is the brains of the operation.  Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate recipient Service(s) based on the EventSpec(s) supplied by the Service when it registered with the Dispatcher.
 
 ## What does an Event and an EventSpec look like?
-An Event is just a string.  In it's simplest form, an entire Event (and Message even) can be composed entirely of a simple string like `'shutdown'`, but typically a more descriptive form is used which seperates component fields of the Event with `::`s, like `'OwnerService::Action::Detail'`.
+An Event is just a String.  In it's simplest form, an entire Event (and Message even) can be composed entirely of a simple String like `'shutdown'`, but typically a more descriptive form is used which seperates component fields of the Event with `::`s, like `'OwnerService::Action::Argument::AnotherArgument'`.
 
 An EventSpec can be supplied by the Service when registering with the Dispatcher, in order to select which Events are received by the Service.  EventSpecs can be a simple String (like: `'shutdown'`), a String including wildcards (`'OwnerService::**'`), a Regexp, or even an Array or Set of multiple Strings/Regexps.
 
@@ -33,7 +33,7 @@ To simplify filtering, a EventSpec String can contain a `*` or a `**` wildcard. 
 Strings with wildcards are turned into Regexps by the Dispatcher.  Wildcard Strings are just a little more readable.
 
 ## Passed Queues (or, what about return values?)
-Typically speaking, Services participating in a SOA don't get return values, since an SOA is asynchronous.  But since this is a "Nano" SOA, we're not quite so asynchronous, so we can cheat a bit.  The third parameter in a message, after the optional payload, is a passed Queue.  This same queue is returned by the Dispatcher#send method, so the original message sender can read from the Queue in order to wait on return code from any Service(s) that received the message it just sent (or anything else you want to do with it).  Or don't - you can ignore the Queue, and Ruby's Garbage Collection will take care of it.
+Typically speaking, Services participating in a SOA don't get return values, since an SOA is asynchronous.  But since this is a "Nano" SOA, we're not quite so asynchronous, so we can cheat a bit.  The third parameter in a message, after the optional payload, is a passed Queue.  This same queue is returned by the Dispatcher#send method, so the original message sender can read from the Queue in order to wait on return value from any Service(s) that received the message it just sent (or anything else you want to do with it).  Or don't - you can ignore the Queue, and Ruby's Garbage Collection will take care of it.
 
 ## How do you use it?
 It's easy.  Here's a self-explanatory example of a few Services that interact with each other.
@@ -50,8 +50,11 @@ dispatcher.register lambda { |event, payload|
 }
 
 # Usually, you'll want to supply an EventSpec.  You can also register a Block.
+#   Upon finished, we'll send a completing message back to the dispatcher.
+#
 dispatcher.register(event_spec: 'OtherService::Message::*') do |event, payload|
   puts "I received only events from OtherService, like: #{event}"
+  'ExampleBlock::ReturnValue::Hi Guys'
 end
 
 # Or, you can register a Method.  If the return value of any Service hook is a 
