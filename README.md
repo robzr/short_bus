@@ -1,9 +1,8 @@
-# Nanoservice
-Simple multi-threaded process dispatcher for Ruby apps.
+# ShortBus
+Minimalist multi-threaded message dispatcher for Ruby apps.
 
 ## What does it do?
-
-The goal is to provide a minimal, lightweight message dispatcher/service api, providing multithreaded event publishing and subscription for Ruby (Lambdas, Methods, Classes) 
+The goal is to provide a minimal, lightweight message dispatcher/service API, providing multithreaded event publishing and subscription for Ruby (Lambdas, Methods, Classes) 
 
 - TODO: allow running as a simple queue
 - TODO: object instantiation for callback if passed a class
@@ -11,26 +10,21 @@ The goal is to provide a minimal, lightweight message dispatcher/service api, pr
 - TODO: make Message a Class (inherit Queue), Array (for payload), String (for name)
 - TODO: use IPv6 : format for events
 
-Nanoservice has no dependencies outside of the Ruby Core & Standard Libraries, and should work with JRuby.
-
-## What is a nanoservice?
-If a microservice uses language independent messaging and stand-alone services, then a nanoservice is an order of magnitude simpler.
-
-In it's simplest form, a nanoservice is simply a callback triggered on by a message received by the Dispatcher.
+ShortBus has no dependencies outside of the Ruby Core & Standard Libraries, and should work with JRuby.
 
 ## What are the components?
-A Service is an object which participates in the SOA.  It could be simply a Lambda, Block or Method launched on demand to receive and process (and optionally send) messages; it could have dedicated threads sending messages, or both.  Usually, each Service exists in it's own Module and Class namespace, but that's up to you. Ideally, the only communication different Services have with each other is through the Dispatcher, with the exception of passed Queues (see passed Queues section below).
+A Service is an object which participates in the SOA.  It could be simply a Lambda, Block or Method launched on demand to receive and process (and optionally send) messages; it could have dedicated threads sending messages, or both.  Usually, each Service exists in it's own Module and Class namespace, but that's up to you. Ideally, the only communication different Services have with each other is through the Driver, with the exception of passed Queues (see passed Queues section below).
 
 A Message is what is received, routed and sent to the recipient Services.  A Message is a simple hash composed of an event (a description of the message), an optional payload object, and an optional passed Queue.
 
 `a_message = { event: 'example::event', payload: any_object }`
 
-The Dispatcher (Nanoservice::Dispatcher) is the brains of the operation.  Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate recipient Service(s) based on the EventSpec(s) supplied by the Service when it registered with the Dispatcher.
+The Driver (ShortBus::Driver) is the brains of the operation.  Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate recipient Service(s) based on the EventSpec(s) supplied by the Service when it registered with the Driver.
 
 ## What does an Event and an EventSpec look like?
 An Event is just a String.  In it's simplest form, an entire Event (and Message even) can be composed entirely of a simple String like `'shutdown'`, but typically a more descriptive form is used which seperates component fields of the Event with `::`s, like `'OwnerService::Action::Argument::AnotherArgument'`.
 
-An EventSpec can be supplied by the Service when registering with the Dispatcher, in order to select which Events are received by the Service.  EventSpecs can be a simple String (like: `'shutdown'`), a String including wildcards (`'OwnerService::**'`), a Regexp, or even an Array or Set of multiple Strings/Regexps.
+An EventSpec can be supplied by the Service when registering with the Driver, in order to select which Events are received by the Service.  EventSpecs can be a simple String (like: `'shutdown'`), a String including wildcards (`'OwnerService::**'`), a Regexp, or even an Array or Set of multiple Strings/Regexps.
 
 ### Whats up with those wildcards?
 To simplify filtering, a EventSpec String can contain a `*` or a `**` wildcard.  A `*` wildcard matches just one field between `::` delimiters.  A `**` wildcard matches one or more.
@@ -39,10 +33,10 @@ To simplify filtering, a EventSpec String can contain a `*` or a `**` wildcard. 
 
 `'Service::**'` matches both `'Service::Start'` and `'Service::Start::Now'`
 
-Strings with wildcards are turned into Regexps by the Dispatcher.  Wildcard Strings are just a little more readable.
+Strings with wildcards are turned into Regexps by the Driver.  Wildcard Strings are just a little more readable.
 
 ## Passed Queues (or, what about return values?)
-Typically speaking, Services participating in a SOA don't get return values, since an SOA is asynchronous.  But since this is a "Nano" SOA, we're not quite so asynchronous, so we can cheat a bit.  The third parameter in a message, after the optional payload, is a passed Queue.  This same queue is returned by the Dispatcher#send method, so the original message sender can read from the Queue in order to wait on return value from any Service(s) that received the message it just sent (or anything else you want to do with it).  Or don't - you can ignore the Queue, and Ruby's Garbage Collection will take care of it.
+Typically speaking, Services participating in a SOA don't get return values, since an SOA is asynchronous.  But since this is a "Nano" SOA, we're not quite so asynchronous, so we can cheat a bit.  The third parameter in a message, after the optional payload, is a passed Queue.  This same queue is returned by the Driver#send method, so the original message sender can read from the Queue in order to wait on return value from any Service(s) that received the message it just sent (or anything else you want to do with it).  Or don't - you can ignore the Queue, and Ruby's Garbage Collection will take care of it.
 
 ## How do you use it?
 It's easy.  Here's a self-explanatory example of a few Services that interact with each other.
@@ -50,8 +44,8 @@ It's easy.  Here's a self-explanatory example of a few Services that interact wi
 ```ruby
 require_relative 'nanoservice'
 
-# First, instantiate the Dispatcher and begin our monitoring thread.
-dispatcher = Nanoservice::Dispatcher.new
+# First, instantiate the Driver and begin our monitoring thread.
+dispatcher = ShortBus::Driver.new
 
 # Now let's register a simple service.  The default EventSpec receives all messages.
 dispatcher.register lambda { |event, payload|
@@ -67,7 +61,7 @@ dispatcher.register(event_spec: 'OtherService::Message::*') do |event, payload|
 end
 
 # Or, you can register a Method.  If the return value of any Service hook is a 
-#   String or a Hash with an :event key, it will be sent back to the Dispatcher 
+#   String or a Hash with an :event key, it will be sent back to the Driver 
 #   as a new message.
 #
 def bob(event, payload)
@@ -86,7 +80,7 @@ dispatcher.register(
   thread_count: 5
 )
 
-# Now, send a simple message to the Dispatcher
+# Now, send a simple message to the Driver
 dispatcher.send 'Random Event'
 
 # << is an alias for send

@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+require_relative 'short_bus'
+require 'pp'
+
+dispatcher = ShortBus::Driver.new
+
+lamb = lambda { |event, payload|
+  puts "***HI LAMBDA RUNNING HERE args: #{event.pretty_inspect} -> #{payload.pretty_inspect}"
+  sleep 2
+}
+dispatcher.register(service: lamb, thread_count: 2)
+
+dispatcher.register(event_spec: ["hey**", "hi::*"]) do |event, payload|
+  puts "Received: Event(#{event})" 
+  puts "Received: Payload(#{payload})" 
+end
+
+dispatcher.send("hi::bob", "potato")
+sleep 0.25
+dispatcher.send("hello::jim", "pot")
+sleep 0.25
+dispatcher.send("hi::xxx", "stew")
+
+sleep 5

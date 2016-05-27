@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
 #
-# Nanoservice example using a passed Queue to communicate a return value
+# ShortBus example using a passed Queue to communicate a return value
 
-require_relative '../nanoservice'
+require_relative '../short_bus'
 
-dispatcher = Nanoservice::Dispatcher.new
+driver = ShortBus::Driver.new
 
 def house_cleaner(message)
   puts "Lets blow this popsicle stand..." 
@@ -13,9 +13,9 @@ def house_cleaner(message)
   sleep 2
   exit
 end
-dispatcher.register(event_spec: '*::Shutdown', service: method(:house_cleaner))
+driver.register(event_spec: '*::Shutdown', service: method(:house_cleaner))
 
-return_notice = dispatcher.send('Everyone::Shutdown').shift
+return_notice = driver.send('Everyone::Shutdown').shift
 puts "I heard back from the house_cleaner, who says: #{return_notice}"
 
 # sleep indefinitely, or until we somehow exit...

@@ -1,7 +1,7 @@
 require 'pp'
 require 'set'
 
-module Nanoservice
+module ShortBus
   class EventSpec
     attr_reader :specs
 

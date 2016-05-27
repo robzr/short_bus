@@ -2,7 +2,7 @@ require 'observer'
 require 'pp'
 require 'set'
 
-module Nanoservice
+module ShortBus
   class Service
     attr_reader :name, :run_count, :threads
 

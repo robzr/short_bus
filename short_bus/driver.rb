@@ -1,8 +1,8 @@
 require 'pp'
 require 'set'
 
-module Nanoservice
-  class Dispatcher
+module ShortBus
+  class Driver
 
     DEFAULT_OPTIONS = { 
       debug: false,
@@ -88,7 +88,7 @@ module Nanoservice
     private
 
     def debug_message(message)
-      STDERR.puts "Dispatcher::#{message}" if @debug
+      STDERR.puts "Driver::#{message}" if @debug
     end
 
     def dispatch_loop
