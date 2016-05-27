@@ -47,21 +47,26 @@ module Nanoservice
       @services[service_ref.name] = service_ref
     end
 
-    def send(message, payload = nil)
-      if message.class.name == 'String'
-        queue = Queue.new
-        @messages << { event: message, payload: payload, queue: queue }
-        queue
-      elsif message.class.name == 'Hash' && message.has_key?(:event)
-        message.merge!({ queue: Queue.new }) unless message.has_key?(:queue)
-        @messages << message
-        message[:queue]
-      else
-        raise ArgumentError => 'Invalid message class'
-      end
+    def send(event, payload = nil)
+      message = Message.new(event, payload)
+      @messages << message if message
+      message
     end
 
-    alias_method :<<, :send
+    def <<(arg)
+      case arg.class.name
+      when 'String'
+        send(arg)
+      when 'Array'
+        if arg[0].class.name == 'String'
+          send(arg[0], arg.slice[1..-1])
+        else
+          raise ArgumentError => "Invalid << arg #{arg.pretty_inspect}"
+        end
+      else
+        raise ArgumentError => "Invalid << arg #{arg.pretty_inspect}"
+      end
+    end
 
     def unregister(name)
       if @services.has_key? name
@@ -84,9 +89,7 @@ module Nanoservice
 
     def route_message(message)
       debug_message "route_message(#{message})"
-      @services.values.each do |service| 
-        service.check message
-      end
+      @services.values.each { |service| service.check message }
     end
   end
 end
