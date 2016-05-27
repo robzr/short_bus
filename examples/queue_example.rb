@@ -6,10 +6,10 @@ require_relative '../nanoservice'
 
 dispatcher = Nanoservice::Dispatcher.new
 
-def house_cleaner(event, payload, queue)
+def house_cleaner(message)
   puts "Lets blow this popsicle stand..." 
   sleep 1
-  queue << "I'm working on it!"
+  message << "I'm working on it!"
   sleep 2
   exit
 end

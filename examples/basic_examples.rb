@@ -1,4 +1,6 @@
 #!/usr/bin/env ruby
+# 
+# Basic usage examples
 
 require_relative '../nanoservice'
 
@@ -6,24 +8,24 @@ require_relative '../nanoservice'
 dispatcher = Nanoservice::Dispatcher.new
 
 # Register a Lambda service.  Default EventSpec receives all messages.
-dispatcher.register lambda { |event| puts "Event Watcher lambda: #{event}" }
+dispatcher.register lambda { |message| puts "Event Watcher lambda: #{message.event}" }
 
 # Usually, you'll supply an EventSpec so you don't process unnecessary messages.
 #   Dispatcher can also take blocks.  If the Lambda/Block/Method takes two
 #   arguments, the second is the message payload, which can be any object that
 #   the sender attaches.
 #   
-dispatcher.register(event_spec: 'OtherService::Message::*') do |event, payload|
-  puts "Block receives only events matching OtherService::Message::*, like #{event}"
+dispatcher.register(event_spec: 'OtherService::Message::*') do |message|
+  puts "Block receives only events matching OtherService::Message::*, like #{message.event}"
 end
 
 # If the return value of the Service hook is a String or a Hash with an :event 
 #   key, it will be sent back to the Dispatcher as a new message.  In this case,
 #   our Service is a method, which is passed using the #method method.
 #
-def bob(event, payload)
-  puts "Bob got the event #{event}!"
-  { event: "Bob::Reply", payload: "Thanks, I love a good message." }
+def bob(message)
+  puts "Bob got the event #{message.event}!"
+  Nanoservice::Message.new("Bob::Reply", "Thanks, I love a good message.")
 end
 
 # We'll register with an array of event_specs this time.

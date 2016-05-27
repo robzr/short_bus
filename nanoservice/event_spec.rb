@@ -13,14 +13,12 @@ module Nanoservice
       @specs += process(spec)
     end
 
-    def delete(target)
-      @specs.delete target
+    def delete(spec)
+      @specs.delete spec
     end
 
     def match(event)
-      @specs.reduce(false) do |acc, spec| 
-        acc || match_single(spec, event)
-      end
+      @specs.reduce(false) { |acc, spec| acc || match_single(spec, event) }
     end
 
     private

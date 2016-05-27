@@ -48,23 +48,33 @@ module Nanoservice
     end
 
     def send(event, payload = nil)
-      message = Message.new(event, payload)
+      case event.class.name
+      when 'Message'
+        message = event
+      when 'String'
+        message = Message.new(event, payload)
+      else 
+        if event.class.name != 'NilClass'
+          raise ArgumentError => "Invalid send event: #{event.pretty_inspect}"
+        end
+      end
       @messages << message if message
       message
     end
 
     def <<(arg)
-      case arg.class.name
-      when 'String'
+      if ['String', 'Message'].include? arg.class.name
         send(arg)
-      when 'Array'
-        if arg[0].class.name == 'String'
-          send(arg[0], arg.slice[1..-1])
+      elsif arg.class.name == 'Array' && arg[0].class.name == 'String'
+        send(arg[0], arg.slice[1..-1])
+      elsif arg.class.name == 'Hash' && arg.has_key?(:event)
+        if arg.has_key?(:payload)  
+          send(arg[:event], arg[:payload])
         else
-          raise ArgumentError => "Invalid << arg #{arg.pretty_inspect}"
+          send(arg[:event])
         end
-      else
-        raise ArgumentError => "Invalid << arg #{arg.pretty_inspect}"
+      elsif arg.class.name != 'NilClass'
+        raise ArgumentError => "Invalid << arg: #{arg.pretty_inspect}"
       end
     end
 
