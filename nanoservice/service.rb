@@ -4,7 +4,7 @@ require 'set'
 
 module Nanoservice
   class Service
-    attr_reader :name, :threads
+    attr_reader :name, :run_count, :threads
 
     def initialize(
       debug: false,
@@ -19,7 +19,9 @@ module Nanoservice
       @event_spec = EventSpec.new event_spec
       @service = service
       @thread_count = thread_count
+
       @name = name || @service.to_s
+
       @run_queue = Queue.new
       @run_count = 0
       @threads = {}
@@ -27,7 +29,7 @@ module Nanoservice
     end
     
     def check(message)
-      @run_queue << message if match message[:event]
+      @run_queue << message if match message.event
     end
 
     def start
@@ -51,32 +53,14 @@ module Nanoservice
 
     private
 
-    def debug_message(message)
-      STDERR.puts "Service::#{message}" if @debug
-    end
-
-    def maybe_send(message = nil)
-      debug_message "maybe_send(#{message})"
-      case message.class.name
-      when 'String'
-        @dispatcher << message
-      when 'Hash'
-        @dispatcher.send message if message.has_key? :event
-      end
-    end
-
     def run_service(message)
       @run_count += 1
       case @service.class.name
       when 'Method', 'Proc'
-        if @service.arity >= 3 || @service.arity < 0
-          maybe_send @service.call(message[:event], message[:payload], message[:queue])
-        elsif @service.arity == 2
-          maybe_send @service.call(message[:event], message[:payload])
-        elsif @service.arity == 1
-          maybe_send @service.call(message[:event])
+        if @service.arity == 0
+          @dispatcher << @service.call
         else
-          maybe_send @service.call
+          @dispatcher << @service.call(message)
         end
       else
         raise ArgumentError => "Unknown service type: #{@service.class.name}"
