@@ -5,47 +5,50 @@ module ShortBus
   class Driver
     include DebugMessage
 
-    DEFAULT_OPTIONS = { 
-      debug: false,
-      default_event_spec: '**'
-    }
 
     attr_reader :services, :threads
     attr_accessor :debug, :default_event_spec
 
     def initialize(*options)
-     @options = DEFAULT_OPTIONS
-     @options.merge! options[0] if options[0]
-     @debug = @options[:debug]
-     @default_event_spec = @options[:default_event_spec]
+      @options = { 
+        debug: false,
+        default_event_spec: '**',
+        default_sender_spec: nil,
+        default_thread_count: 1
+      }
+      @options.merge! options[0] if options[0]
+      @debug = @options[:debug]
+      @default_event_spec = @options[:default_event_spec]
+      @default_sender_spec = @options[:default_sender_spec]
+      @default_thread_count = @options[:default_thread_count]
 
-     @messages = Queue.new
-     @services = {}
-
-     @threads = { driver: driver_loop }
+      @messages = Queue.new
+      @services = {}
+      @threads = { route_message_loop: launch_route_message_loop }
     end
 
     def register(*args, &block)
-      arg = args[0]
-      args = {
+      service_args = {
         debug: @debug,
         event_spec: @default_event_spec,
         name: nil,
+        sender_spec: @default_sender_spec,
         service: nil,
-        thread_count: 1,
-      }.merge arg.class.name == 'Hash' ? arg : { service: arg }
+        thread_count: @default_thread_count,
+      }.merge args[0].class.name == 'Hash' ? args[0] : { service: args[0] }
 
-      args[:service] = block.to_proc if block_given?
+      service_args[:service] = block.to_proc if block_given?
 
-      debug_message("register(#{args[:service]})")
+      debug_message("#register service: #{service_args[:service]}")
 
       service_ref = Service.new(
-        debug: args[:debug],
+        debug: service_args[:debug],
         driver: self,
-        event_spec: args[:event_spec],
-        name: args[:name],
-        service: args[:service],
-        thread_count: args[:thread_count]
+        event_spec: service_args[:event_spec],
+        name: service_args[:name],
+        sender_spec: service_args[:sender_spec],
+        service: service_args[:service],
+        thread_count: service_args[:thread_count]
       )
       @services[service_ref.name] = service_ref
     end
@@ -62,7 +65,9 @@ module ShortBus
         message = convert_to_message message
         message.sender = sender if sender
       else
-        message = Message.new(event: event, payload: payload, sender: sender)
+        message = Message.new(event: event,
+                              payload: payload,
+                              sender: sender) if event
       end
       self << message
     end
@@ -90,7 +95,7 @@ module ShortBus
       end
     end
 
-    def driver_loop
+    def launch_route_message_loop
       Thread.new do
         loop { route_message @messages.shift }
       end

@@ -15,7 +15,7 @@ module ShortBus
       if process_args args
         super()
       else
-        raise ArgumentError => "#Message: Invalid args #{args.pretty_inspect}"
+        raise ArgumentError.new "#Message: Invalid args #{args.pretty_inspect}"
       end
     end
 
