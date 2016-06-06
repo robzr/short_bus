@@ -1,9 +1,10 @@
 require 'pp'
+require 'timeout'
 
-# We're just a Queue, but with a couple extras:
+# Queue, with a few mods
 #  - event (string)
 #  - optional payload (object)
-#  - optional sender
+#  - sender (string or nil = anonymous)
 #
 module ShortBus
   class Message < Queue
@@ -18,6 +19,20 @@ module ShortBus
         raise ArgumentError.new "#Message: Invalid args #{args.pretty_inspect}"
       end
     end
+
+    def pop(time_out=nil)
+      if time_out.is_a? Numeric
+        begin
+          Timeout.timeout(time_out) { super(nil) }
+        rescue Timeout::Error
+        end
+      else
+        super(time_out)
+      end
+    end
+
+    alias_method :shift, :pop
+    alias_method :deq, :pop
 
     def to_s
       @event

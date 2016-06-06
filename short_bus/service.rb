@@ -5,7 +5,7 @@ require 'openssl'
 
 module ShortBus
 
-  class ServiceThreadDone < StandardError
+  class ServiceThreadDone < ThreadError
   end
 
   class Service
@@ -42,10 +42,8 @@ module ShortBus
     
     def check(message)
       debug_message "[#{@name}]#check(#{message})"
-      if match_event message.event
-        if match_sender message.sender
-          @run_queue << message if message.sender != @name || @recursive
-        end
+      if match_event(message.event) && match_sender(message.sender)
+        @run_queue << message if message.sender != @name || @recursive
       end
     end
 
@@ -74,7 +72,7 @@ module ShortBus
           rescue ShortBus::ServiceThreadDone => exc
             debug_message "[#{@name}]#start ServiceThreadDone => #{exc.inspect}"
           rescue Exception => exc
-            puts "Service::start Exception: #{exc.inspect}"
+            abort "Service::start Exception: #{exc.inspect}"
           end
         end
       end

@@ -32,6 +32,7 @@ driver.register(
 ) do |message|
   puts "Block Received: Event(#{message}) from #{message.sender}" 
   puts "Block Received: Payload(#{message.payload})" if message.payload
+  message << "haha"
   "hi"
 end
 
@@ -43,9 +44,10 @@ Thread.new {
     sleep 0.1
   end
 }
-driver << ["hi::bob", "potato"]
+first_message = driver << ["hi::bob", "potato"]
 sleep 0.25
 driver << ["hello::jim", "pot"]
 sleep 0.25
 driver << ["hola::xxx", "stew"]
+pp first_message.shift(5.0)
 sleep 5.0
