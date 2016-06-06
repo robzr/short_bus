@@ -11,8 +11,7 @@ module ShortBus
   class Service
     include DebugMessage
 
-    attr_reader :name, :run_count, :threads
-    attr_reader :run_count
+    attr_reader :name, :threads
 
     def initialize(
       debug: false,
@@ -34,7 +33,6 @@ module ShortBus
 
       @name = name || @service.to_s || OpenSSL::HMAC.new(rand.to_s, 'sha1').to_s
       @run_queue = Queue.new
-#      @run_count = 0
       @thread_launcher = nil
       @threads = []
       start
@@ -102,7 +100,6 @@ module ShortBus
     end
 
     def run_service(message)
-#      @run_count += 1
       debug_message "[#{@name}]#run_service(#{message}) -> #{@service.class.name} ##{@service.arity}"
       if @service.is_a?(Proc) || @service.is_a?(Method)
         if @service.arity == 0
