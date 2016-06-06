@@ -8,7 +8,7 @@ driver = ShortBus::Driver.new
 driver.register(
   name: 'lambie',
   service: lambda { |message|
-    puts "Lambda Received: #{message} from #{message.sender}"
+    puts "Lambda Received: #{message}"
     sleep 0.2
     raise Exception.new 'random explosion' if rand(4) == 0
     'lambie::response'
@@ -21,7 +21,7 @@ driver.register(
   sender_spec: 'lambie', 
   thread_count: 2
 ) do |msg|
-  puts "GOT #{msg} from #{msg.sender}"
+  puts "GOT #{msg} from #{msg.sender || 'Anonymous-Sender'}"
   sleep 0.5
   nil
 end
@@ -30,24 +30,27 @@ driver.register(
   event_spec: ['h**', '**::hello'],
   name: 'inline_bob'
 ) do |message|
-  puts "Block Received: Event(#{message}) from #{message.sender}" 
+  puts "Block Received: Event(#{message}) from #{message.sender || 'Anonymous-Sender'}" 
   puts "Block Received: Payload(#{message.payload})" if message.payload
-  message << "haha"
-  "hi"
+  message << 'arbitrary object sent via Message'
+  'new::message'
 end
 
 #pp driver.services
 
 Thread.new { 
-  10.times do 
+  5.times do 
     driver << "send::thread"
     sleep 0.1
   end
 }
+
 first_message = driver << ["hi::bob", "potato"]
-sleep 0.25
+sleep 0.15
 driver << ["hello::jim", "pot"]
-sleep 0.25
+sleep 0.15
 driver << ["hola::xxx", "stew"]
-pp first_message.shift(5.0)
-sleep 5.0
+
+pp first_message.shift(3.0)
+
+sleep 3.0
