@@ -68,10 +68,12 @@ module ShortBus
       self << message
     end
 
-    def unregister(name)
-      if @services.has_key? name
-        @services[name].stop
-        @services.delete name
+    def unregister(service)
+      if service.is_a? ShortBus::Service
+        unregister(service.name)
+      elsif @services.has_key? service
+        @services[service].stop
+        @services.delete service
       end      
     end
     
