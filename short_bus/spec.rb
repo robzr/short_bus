@@ -24,27 +24,25 @@ module ShortBus
     private
 
     def match_single(spec, item)
-      case spec.class.name
-      when 'String'
+      if spec.is_a? String
         spec == item
-      when 'Regexp'
+      elsif spec.is_a? Regexp
         spec.match item
       end
     end
 
     def process(spec, to_set = true)
-      case spec.class.name
-      when 'Array'
+      if spec.is_a? Array
         process spec.flatten.to_set
-      when 'Regexp'
+      elsif spec.is_a? Regexp
         to_set ? [spec].to_set : spec
-      when 'Set'
+      elsif spec.is_a? Set
         spec.flatten
           .map { |spec| process(spec, false) }
           .to_set
-      when 'String'
+      elsif spec.is_a? String
         to_set ? [string_to_regexp(spec)].to_set : string_to_regexp(spec)
-      when 'NilClass'
+      elsif spec.is_a? NilClass
         [/.*/].to_set
       end
     end
@@ -58,5 +56,3 @@ module ShortBus
     end
   end
 end
-
-

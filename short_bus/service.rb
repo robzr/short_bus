@@ -10,9 +10,9 @@ module ShortBus
 
   class Service
     include DebugMessage
-    CLASS_NAME = "Service"
 
     attr_reader :name, :run_count, :threads
+    attr_reader :run_count
 
     def initialize(
       debug: false,
@@ -34,7 +34,7 @@ module ShortBus
 
       @name = name || @service.to_s || OpenSSL::HMAC.new(rand.to_s, 'sha1').to_s
       @run_queue = Queue.new
-      @run_count = 0
+#      @run_count = 0
       @thread_launcher = nil
       @threads = []
       start
@@ -52,7 +52,7 @@ module ShortBus
         begin
           loop { run_service @run_queue.shift }
         rescue Exception => e
-          # TODO: add optional exception reporting/upstream raising
+          # TODO: add exception reporting/upstream raising to Driver thread
           puts "[#{@name}]service_thread => #{e.inspect}"
         ensure
           if @thread_launcher
@@ -94,26 +94,17 @@ module ShortBus
     private
 
     def match_event(event)
-      if @event_spec
-        @event_spec.match event
-      else
-        true
-      end
+      @event_spec ? @event_spec.match(event) : true
     end
 
     def match_sender(sender)
-      if @sender_spec
-        @sender_spec.match sender
-      else
-        true
-      end
+      @sender_spec ?  @sender_spec.match(sender) : true
     end
 
     def run_service(message)
-      @run_count += 1
+#      @run_count += 1
       debug_message "[#{@name}]#run_service(#{message}) -> #{@service.class.name} ##{@service.arity}"
-      case @service.class.name
-      when 'Method', 'Proc'
+      if @service.is_a?(Proc) || @service.is_a?(Method)
         if @service.arity == 0
           @driver.send(message: @service.call, sender: @name)
         elsif [1, -1, -2].include? @service.arity

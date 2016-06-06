@@ -5,9 +5,8 @@ module ShortBus
   class Driver
     include DebugMessage
 
-
     attr_reader :services, :threads
-    attr_accessor :debug, :default_event_spec
+    attr_accessor :debug
 
     def initialize(*options)
       @options = { 
@@ -18,9 +17,6 @@ module ShortBus
       }
       @options.merge! options[0] if options[0]
       @debug = @options[:debug]
-      @default_event_spec = @options[:default_event_spec]
-      @default_sender_spec = @options[:default_sender_spec]
-      @default_thread_count = @options[:default_thread_count]
 
       @messages = Queue.new
       @services = {}
@@ -30,12 +26,12 @@ module ShortBus
     def register(*args, &block)
       service_args = {
         debug: @debug,
-        event_spec: @default_event_spec,
+        event_spec: @options[:default_event_spec],
         name: nil,
-        sender_spec: @default_sender_spec,
+        sender_spec: @options[:default_sender_spec],
         service: nil,
-        thread_count: @default_thread_count,
-      }.merge args[0].class.name == 'Hash' ? args[0] : { service: args[0] }
+        thread_count: @options[:default_thread_count],
+      }.merge args[0].is_a?(Hash) ? args[0] : { service: args[0] }
 
       service_args[:service] = block.to_proc if block_given?
 
@@ -82,13 +78,13 @@ module ShortBus
     private
 
     def convert_to_message(arg)
-      if arg.class.name == 'ShortBus::Message'
+      if arg.is_a? ShortBus::Message
         arg
-      elsif arg.class.name == 'String'
+      elsif arg.is_a? String
         Message.new(arg)
-      elsif arg.class.name == 'Array' && arg[0].class.name == 'String'
+      elsif arg.is_a?(Array) && arg[0].is_a?(String)
         Message.new(arg)
-      elsif arg.class.name == 'Hash' && arg.has_key?(:event)
+      elsif arg.is_a?(Hash) && arg.has_key?(:event)
         sender = arg.has_key?(:sender) ? arg[:sender] : nil
         payload = arg.has_key?(:payload) ? arg[:payload] : nil
         Message.new(event: arg[:event], payload: payload, sender: sender)

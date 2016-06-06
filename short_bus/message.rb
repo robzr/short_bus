@@ -41,15 +41,14 @@ module ShortBus
     private
 
     def process_args(args)
-      if args.class.name == 'Array' && args.length > 0
-        case args[0].class.name
-        when 'Array'
+      if args.is_a?(Array) && args.length > 0
+        if args[0].is_a? Array
           process_args args[0]
-        when 'String'
+        elsif args[0].is_a? String
           @payload = args[1] if args.length == 2
           @payload = args.slice(1..-1) if args.length > 2
           @event = args[0]
-        when 'Hash' && args[0].has_key?(:event)
+        elsif args[0].is_a?(Hash) && args[0].has_key?(:event)
           @payload = args[0][:payload] if args[0].has_key?(:payload)
           @sender = args[0][:sender] if args[0].has_key?(:sender)
           @event = args[0][:event]
