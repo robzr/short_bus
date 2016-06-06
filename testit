@@ -3,23 +3,37 @@
 require_relative 'short_bus'
 require 'pp'
 
-dispatcher = ShortBus::Driver.new
+driver = ShortBus::Driver.new
 
-lamb = lambda { |event, payload|
-  puts "***HI LAMBDA RUNNING HERE args: #{event.pretty_inspect} -> #{payload.pretty_inspect}"
-  sleep 2
+lamb = lambda { |message|
+  puts "Lambda Received: #{message}"
+  sleep 0.25
+  "lambdasend::hi"
 }
-dispatcher.register(service: lamb, thread_count: 2)
+driver.register(service: lamb, thread_count: 2)
 
-dispatcher.register(event_spec: ["hey**", "hi::*"]) do |event, payload|
-  puts "Received: Event(#{event})" 
-  puts "Received: Payload(#{payload})" 
+driver.register(debug: false, event_spec: 'lambdasend::hi', thread_count: 2) do |msg|
+  puts "GOT: #{msg}"
+  sleep 0.5
+  nil
 end
 
-dispatcher.send("hi::bob", "potato")
-sleep 0.25
-dispatcher.send("hello::jim", "pot")
-sleep 0.25
-dispatcher.send("hi::xxx", "stew")
+driver.register(event_spec: ["hey**", "hi::*"]) do |message|
+  puts "Block Received: Event(#{message})" 
+  puts "Block Received: Payload(#{message.payload})" if message.payload
+end
 
-sleep 5
+#pp driver.services
+
+Thread.new { 
+  10.times do 
+    driver << "send::thread"
+    sleep 0.1
+  end
+}
+driver << ["hi::bob", "potato"]
+sleep 0.25
+driver << ["hello::jim", "pot"]
+sleep 0.25
+driver << ["hi::xxx", "stew"]
+sleep 5.0

@@ -3,6 +3,7 @@ require 'set'
 
 module ShortBus
   class Driver
+    include DebugMessage
 
     DEFAULT_OPTIONS = { 
       debug: false,
@@ -12,19 +13,22 @@ module ShortBus
     attr_reader :services, :threads
     attr_accessor :debug, :default_event_spec
 
-    def initialize(options: {})
-     @options = DEFAULT_OPTIONS.merge options 
+    def initialize(*options)
+     @options = DEFAULT_OPTIONS
+     @options.merge! options[0] if options[0]
      @debug = @options[:debug]
      @default_event_spec = @options[:default_event_spec]
 
      @messages = Queue.new
      @services = {}
 
-     @threads = { dispatcher: dispatch_loop }
+     @threads = { driver: driver_loop }
     end
 
-    def register(arg, &block)
+    def register(*args, &block)
+      arg = args[0]
       args = {
+        debug: @debug,
         event_spec: @default_event_spec,
         name: nil,
         service: nil,
@@ -36,46 +40,31 @@ module ShortBus
       debug_message("register(#{args[:service]})")
 
       service_ref = Service.new(
-        debug: @debug,
-        dispatcher: self,
+        debug: args[:debug],
+        driver: self,
         event_spec: args[:event_spec],
         name: args[:name],
         service: args[:service],
         thread_count: args[:thread_count]
       )
-
       @services[service_ref.name] = service_ref
     end
 
-    def send(event, payload = nil)
-      case event.class.name
-      when 'Message'
-        message = event
-      when 'String'
-        message = Message.new(event, payload)
-      else 
-        if event.class.name != 'NilClass'
-          raise ArgumentError => "Invalid send event: #{event.pretty_inspect}"
-        end
+    def <<(arg)
+      if message = convert_to_message(arg)
+        @messages.push message
+        message
       end
-      @messages << message if message
-      message
     end
 
-    def <<(arg)
-      if ['String', 'Message'].include? arg.class.name
-        send(arg)
-      elsif arg.class.name == 'Array' && arg[0].class.name == 'String'
-        send(arg[0], arg.slice[1..-1])
-      elsif arg.class.name == 'Hash' && arg.has_key?(:event)
-        if arg.has_key?(:payload)  
-          send(arg[:event], arg[:payload])
-        else
-          send(arg[:event])
-        end
-      elsif arg.class.name != 'NilClass'
-        raise ArgumentError => "Invalid << arg: #{arg.pretty_inspect}"
+    def send(event: nil, message: nil, payload: nil, sender: nil)
+      if message
+        message = convert_to_message message
+        message.sender = sender if sender
+      else
+        message = Message.new(event: event, payload: payload, sender: sender)
       end
+      self << message
     end
 
     def unregister(name)
@@ -87,11 +76,21 @@ module ShortBus
     
     private
 
-    def debug_message(message)
-      STDERR.puts "Driver::#{message}" if @debug
+    def convert_to_message(arg)
+      if arg.class.name == 'ShortBus::Message'
+        arg
+      elsif arg.class.name == 'String'
+        Message.new(arg)
+      elsif arg.class.name == 'Array' && arg[0].class.name == 'String'
+        Message.new(arg)
+      elsif arg.class.name == 'Hash' && arg.has_key?(:event)
+        sender = arg.has_key?(:sender) ? arg[:sender] : nil
+        payload = arg.has_key?(:payload) ? arg[:payload] : nil
+        Message.new(event: arg[:event], payload: payload, sender: sender)
+      end
     end
 
-    def dispatch_loop
+    def driver_loop
       Thread.new do
         loop { route_message @messages.shift }
       end
@@ -101,6 +100,7 @@ module ShortBus
       debug_message "route_message(#{message})"
       @services.values.each { |service| service.check message }
     end
+
   end
 end
 
