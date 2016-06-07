@@ -45,6 +45,8 @@ module ShortBus
       end
     end
 
+    # TODO: redo Exception handling with a whitelist, pass exceptions upstream
+    #   or add options for exception logging. Figure out something clean....
     def service_thread
       Thread.new do 
         begin
@@ -52,7 +54,9 @@ module ShortBus
         rescue Exception => e
           # TODO: add exception reporting/upstream raising to Driver thread
           puts "[#{@name}]service_thread => #{e.inspect}"
+          #retry
         ensure
+          # TODO: replace with rescue / retry ?
           if @thread_launcher
             @thread_launcher.raise(ServiceThreadDone, Thread.current)
           end

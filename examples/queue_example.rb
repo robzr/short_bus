@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-#
+
 # ShortBus example using a passed Queue to communicate a return value
 
 require_relative '../short_bus'
@@ -13,10 +13,13 @@ def house_cleaner(message)
   sleep 2
   exit
 end
-driver.register(event_spec: '*::Shutdown', service: method(:house_cleaner))
+driver.register(
+  event_spec: '*::Shutdown',
+  service: method(:house_cleaner)
+)
 
-return_notice = driver.send('Everyone::Shutdown').shift
-puts "I heard back from the house_cleaner, who says: #{return_notice}"
+return_message = driver.send('Everyone::Shutdown').shift
+puts "I heard back from the house_cleaner, who says: #{return_message}"
 
 # sleep indefinitely, or until we somehow exit...
 sleep
