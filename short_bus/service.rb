@@ -35,8 +35,12 @@ module ShortBus
     
     def check(message)
       debug_message "[#{@name}]#check(#{message})"
-      if match_message(message.to_s) && match_publisher(message.publisher)
-        @run_queue << message if message.publisher != @name || @recursive
+      if(
+        (!@message_spec || @message_spec.match(message.to_s)) &&
+        (!@publisher_spec || @publisher_spec.match(message.publisher)) &&
+        (message.publisher != @name || @recursive)
+      )
+        @run_queue << message 
       end
     end
 
@@ -72,14 +76,6 @@ module ShortBus
     end
 
     private
-
-    def match_message(message_name)
-      @message_spec ? @message_spec.match(message_name) : true
-    end
-
-    def match_publisher(publisher)
-      @publisher_spec ? @publisher_spec.match(publisher) : true
-    end
 
     def run_service(message)
       debug_message "[#{@name}]#run_service(#{message}) -> #{@service.class.name} ##{@service.arity}"

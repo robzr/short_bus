@@ -3,17 +3,21 @@ require 'pp'
 module ShortBus
   class Monitor
 
+    DEFAULT_MONITOR_OPTIONS = {
+      message_spec: nil,
+      name: 'ShortBus::Monitor',
+      suppress_payload: false,
+      suppress_publisher: false,
+      publisher_spec: nil,
+      thread_count: 1
+    }
+
     def initialize(*args)
-      @options = {
-        message_spec: nil,
-        name: 'ShortBus::Monitor',
-        suppress_payload: false,
-        suppress_publisher: false,
-        publisher_spec: nil,
-        service: self.method(:monitor),
-        thread_count: 1
-      }
+      @options = DEFAULT_MONITOR_OPTIONS.merge(
+        { service: method(:monitor) }
+      )
       @suppress_payload, @suppress_publisher = nil
+
       if args[0].is_a?(Hash) && args[0].has_key?(:driver)
         @options.merge! args[0]
         @driver = @options[:driver]
@@ -23,27 +27,25 @@ module ShortBus
       else
         raise ArgumentError, 'No driver passed.'
       end
+
       @suppress_payload = @options.delete(:suppress_payload)
       @suppress_publisher = @options.delete(:suppress_publisher)
+
       start
     end
 
     def monitor(message)
       puts "[#{@options[:name]}]  message = #{message}"
-      if message.payload && !@suppress_payload
-        printf(
-          "  %s  payload = %s\n",
-          @options[:name] ?  ' ' * @options[:name].length : '',
-          message.payload.inspect
-        )
-      end
-      if !@suppress_publisher
-        printf(
-          "  %spublisher = %s\n",
-          @options[:name] ?  ' ' * @options[:name].length : '',
-          message.publisher ? message.publisher : '*ANONYMOUS*'
-        )
-      end
+      printf(
+        "  %s  payload = %s\n",
+        @options[:name] ?  ' ' * @options[:name].length : '',
+        message.payload.inspect
+      ) if message.payload && !@suppress_payload
+      printf(
+        "  %spublisher = %s\n",
+        @options[:name] ?  ' ' * @options[:name].length : '',
+        message.publisher ? message.publisher : '*ANONYMOUS*'
+      ) if !@suppress_publisher
       nil
     end
 
