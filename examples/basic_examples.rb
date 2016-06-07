@@ -8,7 +8,7 @@ require_relative '../short_bus'
 driver = ShortBus::Driver.new
 
 # Register a Lambda service.  Default EventSpec receives all messages.
-driver.register lambda { |message| puts "Event Watcher lambda: #{message.event}" }
+driver.register lambda { |message| puts "Event Watcher lambda: #{message}" }
 
 # Usually, you'll supply an EventSpec so you don't process unnecessary messages.
 #   Driver can also take blocks.  If the Lambda/Block/Method takes two
@@ -16,7 +16,7 @@ driver.register lambda { |message| puts "Event Watcher lambda: #{message.event}"
 #   the sender attaches.
 #   
 driver.register(event_spec: 'OtherService::Message::*') do |message|
-  puts "Block receives only events matching OtherService::Message::*, like #{message.event}"
+  puts "Block receives only events matching OtherService::Message::*, like #{message}"
 end
 
 # If the return value of the Service hook is a String or a Hash with an :event 
@@ -24,15 +24,19 @@ end
 #   our Service is a method, which is passed using the #method method.
 #
 def bob(message)
-  puts "Bob got the event #{message.event}!"
-  ShortBus::Message.new("Bob::Reply", "Thanks, I love a good message.")
+  puts "Bob got the event #{message}!"
+  ["Bob::Reply", "Thanks, I love a good message."]
 end
 
 # We'll register with an array of event_specs this time.
-driver.register(event_spec: ['*::GoodMessage::**', '**::Bob'],
-                    service: method(:bob))
+driver.register(
+  event_spec: ['*::GoodMessage::**', '**::Bob'],
+  service: method(:bob)
+)
 
+#
 # Now, lets try a few messages and see what happens.
+#
 
 # In it's simplest form, we'll send an event with no payload.
 driver.send 'Joe::GoodMessage::hi, bob'

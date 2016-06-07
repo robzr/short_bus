@@ -49,24 +49,14 @@ module ShortBus
       @services[service_ref.name] = service_ref
     end
 
-    def <<(arg)
+    def send(arg)
       if message = convert_to_message(arg)
         @messages.push message
         message
       end
     end
 
-    def send(event: nil, message: nil, payload: nil, sender: nil)
-      if message
-        message = convert_to_message message
-        message.sender = sender if sender
-      else
-        message = Message.new(event: event,
-                              payload: payload,
-                              sender: sender) if event
-      end
-      self << message
-    end
+    alias_method :<<, :send
 
     def unregister(service)
       if service.is_a? ShortBus::Service
