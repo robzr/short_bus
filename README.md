@@ -60,7 +60,7 @@ driver.subscribe lambda { |message|
 #
 driver.subscribe(message_spec: 'OtherService::**') do |message|
   puts "I receive only messages from OtherService, like: #{message}"
-  'ExampleBlock::ReturnValue::Uneccessary Text'
+  'ExampleBlock::ReturnValue::Unnecessary Text'
 end
 
 # Or, you can subscribe a Method. If the return value of any Service callback is
