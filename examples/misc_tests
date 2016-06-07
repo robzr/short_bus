@@ -3,7 +3,7 @@
 require 'pp'
 require_relative '../short_bus'
 
-driver = ShortBus::Driver.new
+driver = ShortBus::Driver.new(debug: false)
 
 #monitor = ShortBus::Monitor.new driver
 

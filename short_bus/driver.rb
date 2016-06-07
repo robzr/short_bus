@@ -10,7 +10,7 @@ module ShortBus
 
     DEFAULT_DRIVER_OPTIONS = {
       debug: false,
-      default_message_spec: '**',
+      default_message_spec: nil,
       default_publisher_spec: nil,
       default_thread_count: 1
     }
@@ -37,8 +37,8 @@ module ShortBus
       }.merge args[0].is_a?(Hash) ? args[0] : { service: args[0] }
 
       debug_message("#subscribe service: #{service_args[:service]}")
-      service_ref = Service.new(service_args)
-      @services[service_ref.name] = service_ref
+      service = Service.new(service_args)
+      @services[service.to_s] = service
     end
 
     def publish(arg)
@@ -52,7 +52,7 @@ module ShortBus
 
     def unsubscribe(service)
       if service.is_a? ShortBus::Service
-        unsubscribe(service.name)
+        unsubscribe service.to_s
       elsif @services.has_key? service
         @services[service].stop
         @services.delete service
