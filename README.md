@@ -13,8 +13,8 @@ A message (ShortBus::Message) object is what is received, routed and sent to the
 
 The Driver (ShortBus::Driver) is the brains of the operation. Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate subscribers based on the message\_spec(s) supplied by the service when it subscribed to the Driver.
 
-## What does an message String and an message\_spec look like?
-In it's simplest form, an event can be a simple String like `'shutdown'`, but typically a more descriptive format is used which seperates component fields of the event with `::`s, like `'OwnerService::Action::Argument'`.
+## What does a message String and a message\_spec look like?
+In it's simplest form, a message can be a simple String like `'shutdown'`, but typically a more descriptive format is used which seperates component fields of the message with `::`s, like `'OwnerService::Action::Argument'`.
 
 An message\_spec can be supplied by the service when subscribing in order to select which messages are received by the service. message\_specs can be a String (like: `'shutdown'`), a String with wildcards (`'OwnerService::**'`), a Regexp, or even an Array or Set of multiple Strings and/or Regexps.
 
@@ -48,7 +48,7 @@ driver.subscribe lambda { |message|
   puts "This lambda receives ALL message, like this one: #{message}"
 }
 
-# Usually, you'll want to supply an message_spec when subscribing. You can also
+# Usually, you'll want to supply a message_spec when subscribing. You can also
 #  subscribe a Block.  Upon finishing, we'll send a new message back to
 #  the Driver.
 #
@@ -101,9 +101,9 @@ new_message = ShortBus::Message.new(
 )
 driver << new_message
 
-# We didn't talk about sender:'s, but they follow the same format as events,
+# We didn't talk about sender:'s, but they follow the same format as messages,
 #   and can also be key'd on during registration with a sender_spec just like
-#   message_spec. Unlike an event however, the sender is automatically populated
+#   message_spec. Unlike a message however, the sender is automatically populated
 #   when a subscriber sends a message to the Driver via a return value, and is
 #   used internally by the Driver to prevent an infinite loop of a service
 #   receiving the message it just sent.
@@ -121,7 +121,6 @@ sleep
 
 ## TODO
 
-- merge/rename event to message for consistency?
 - object instantiation for callback if passed a class (maybe?)
 - consider making a mixin class for easier integration
 - make a Redis connector with JSON and binary-serialized object passing
