@@ -121,6 +121,7 @@ sleep
 
 ## TODO
 
+- rename send -> publish, register -> subscribe, unregister -> unsubscribe for consistency?
 - object instantiation for callback if passed a class (maybe?)
 - consider making a mixin class for easier integration
 - make a Redis connector with JSON and binary-serialized object passing
