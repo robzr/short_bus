@@ -87,7 +87,7 @@ driver.send 'Random Event'
 driver << 'Joe::GoodMessage::hi, bob'
 
 # Or, attach a payload object
-driver.send('Steve::GoodMessage::Your Uncle', payload_object)
+driver.send 'Steve::GoodMessage::Your Uncle', payload_object
 
 # Passing a labeled hash makes things a bit easier to read
 driver << { 
