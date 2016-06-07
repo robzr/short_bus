@@ -4,12 +4,7 @@ Multi-threaded pub-sub message dispatcher for implementing self-contained servic
 ## What does it do?
 The goal is to provide a minimal, lightweight message dispatcher/service API, providing multithreaded event publishing and subscription for Ruby closures (Lambdas/Blocks/Methods)
 
-- TODO: object instantiation for callback if passed a class (maybe?)
-- TODO: consider making a mixin class for easier integration
-- TODO: make a Redis connector with JSON and binary-serialized object passing
-- TODO: cascade block to Service object to avoid block.to\_proc slowdown
-
-ShortBus has no dependencies outside of the Ruby Core & Standard Libraries, and should work with JRuby (TODO: test).
+ShortBus has no dependencies outside of the Ruby Core & Standard Libraries.
 
 ## What are the components?
 A Service is a participant in the SOA (Service Oriented Architecture) for sending and/or receiving events. Sending events can be done with the Driver#send method; the return value of this is the Message object, which can then be read as a Queue for a return code.  To receive messages (subscribe), the Service must be registered with the Driver; and is run as a callback in (one or more) dedicated thread(s). The return value from a Service callback will be sent back to the Driver as a new message (if it is of the right type), so be mindful of your return values.
@@ -123,3 +118,11 @@ end
 # Sleep indefinitely, and let the Services do their work.
 sleep
 ```
+
+## TODO
+
+- object instantiation for callback if passed a class (maybe?)
+- consider making a mixin class for easier integration
+- make a Redis connector with JSON and binary-serialized object passing
+- cascade block to Service object to avoid block.to\_proc slowdown
+- properly document, make gem, publish
