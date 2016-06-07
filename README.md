@@ -64,8 +64,8 @@ end
 #   Driver as a new message.
 #
 def bob(message)
-  puts "Bob likes a good message, like: #{message}"
-  { message: "Bob::Reply", payload: "Hi, I love a good message." }
+  puts "Bob likes message. #{message}"
+  { message: "Bob::Reply", payload: "Thank for message you." }
 end
 driver.subscribe(service: method(:bob), message_spec: '*::GoodMessage::**')
 
@@ -81,25 +81,28 @@ driver.subscribe(
 )
 
 # Now, send a simple message to the Driver
-driver.send 'Random Event'
+driver.send 'Simple Message'
 
 # << is an alias for send
-driver << 'Joe::GoodMessage::hi, bob'
+driver << 'NewService::SimpleMessage::Arg'
 
 # Or, attach a payload object
-driver.send 'Steve::GoodMessage::Your Uncle', payload_object
+driver.send 'NewService::SimpleMessage::Arg', payload_object
 
-# Passing a labeled hash makes things a bit easier to read
+# Arrays can be passed
+driver << ['NewService::SimpleMessage::Arg', payload_object]
+
+# A hash makes things a bit easier to read
 driver << { 
-  message: 'Steve::GoodMessage::Your Uncle',
+  message: 'NewService::SimpleMessage::Arg',
   payload: payload_object
 }
 
-# Or you can declare a Message object and send that manually
+# Or you can declare a Message object yourself
 new_message = ShortBus::Message.new(
-  message: 'Steve::GoodMessage::Your Uncle',
-  payload: 'your_uncle',
-  publisher: 'KindOfAnonymous::Sender'
+  message: 'NewService::SimpleMessage::Arg', 
+  payload: payload_object,
+  publisher: 'Semi::Anonymous::Publisher'
 )
 driver << new_message
 
