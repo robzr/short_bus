@@ -29,14 +29,18 @@ module ShortBus
     end
 
     def monitor(message)
-      printf("->%s name = #{message}\n",
-             @options[:name] ? "[#{@options[:name]}]" : '')
+      puts "[#{@options[:name]}]  message = #{message}"
       if message.payload && !@suppress_payload
-        puts "  -> payload = #{message.payload.inspect}"
+        printf(
+          "  %s  payload = %s\n",
+          @options[:name] ?  ' ' * @options[:name].length : '',
+          message.payload.inspect
+        )
       end
       if !@suppress_publisher
         printf(
-          "  ->  publisher = %s\n",
+          "  %spublisher = %s\n",
+          @options[:name] ?  ' ' * @options[:name].length : '',
           message.publisher ? message.publisher : '*ANONYMOUS*'
         )
       end

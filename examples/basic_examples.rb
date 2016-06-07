@@ -19,9 +19,9 @@ driver.subscribe(message_spec: 'OtherService::Message::*') do |message|
   puts "Block receives only messages matching OtherService::Message::*, like #{message}"
 end
 
-# If the return value of the Service hook is a String or a Hash with an :name 
-#   key, it will be sent back to the Driver as a new message.  In this case,
-#   our Service is a method, which is passed using the #method method.
+# If the return value of the Service hook is a String, Array or a Hash with a
+#   :message key, it will be sent back to the Driver as a new message.  In this
+#   case, our Service is a method, which is passed using the #method method.
 #
 def bob(message)
   puts "Bob got the message #{message}!"
@@ -41,10 +41,10 @@ driver.subscribe(
 # In it's simplest form, we'll publish an message with no payload.
 driver.publish 'Joe::GoodMessage::hi, bob'
 
-# Now we'll try a Hash, which includes an :name and a :payload.  Also notice
+# Now we'll try a Hash, which includes an :message and a :payload.  Also notice
 #   we can use the << alias for #publish.
 #
-driver << { name: 'OtherService::Message::Bob', payload: 'is your uncle' }
+driver << { message: 'OtherService::Message::Bob', payload: 'is your uncle' }
 
 # Let the previous message interactions complete.
 sleep 0.1
