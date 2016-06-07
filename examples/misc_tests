@@ -17,7 +17,7 @@ driver.register(
 )
 
 driver.register(
-  debug: false, 
+  debug: true, 
   name: 'got', 
   sender_spec: 'lambie', 
   thread_count: 2
@@ -50,6 +50,6 @@ driver << ["hello::jim", "pot"]
 sleep 0.15
 driver << ["hola::xxx", "stew"]
 
-puts "Shift-back from first message #{first_message.shift(3.0)}"
+puts "Shift-back from first message #{first_message.shift(2)}"
 
-sleep 3.0
+sleep 2

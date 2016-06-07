@@ -8,9 +8,9 @@ driver = ShortBus::Driver.new
 
 def house_cleaner(message)
   puts "Lets blow this popsicle stand..." 
-  sleep 1
+  sleep 0.5
   message << "I'm working on it!"
-  sleep 2
+  sleep 1
   exit
 end
 driver.register(

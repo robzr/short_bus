@@ -21,7 +21,7 @@ module ShortBus
       elsif args.is_a?(Array) && args.length == 1
         @driver = args[0]
       else
-#        raise ArgumentError, 'No driver passed.'
+        raise ArgumentError, 'No driver passed.'
       end
       @suppress_payload = @options.delete(:suppress_payload)
       @suppress_sender = @options.delete(:suppress_sender)

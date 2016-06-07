@@ -23,7 +23,7 @@ module ShortBus
     def pop(time_out=nil)
       if time_out.is_a? Numeric
         begin
-          Timeout.timeout(time_out) { super(nil) }
+          Timeout.timeout(time_out) { super() }
         rescue Timeout::Error
         end
       else

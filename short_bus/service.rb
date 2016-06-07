@@ -29,7 +29,6 @@ module ShortBus
 
       @name = name || @service.to_s || OpenSSL::HMAC.new(rand.to_s, 'sha1').to_s
       @run_queue = Queue.new
-      @thread_launcher = nil
       @threads = []
       start
     end
@@ -68,6 +67,10 @@ module ShortBus
       end
     end
 
+    def to_s
+      @name
+    end
+
     private
 
     def match_event(event)
@@ -75,7 +78,7 @@ module ShortBus
     end
 
     def match_sender(sender)
-      @sender_spec ?  @sender_spec.match(sender) : true
+      @sender_spec ? @sender_spec.match(sender) : true
     end
 
     def run_service(message)

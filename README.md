@@ -2,7 +2,7 @@
 Multi-threaded pub-sub message dispatcher for implementing self-contained service-oriented Ruby apps.
 
 ## What does it do?
-The goal is to provide a minimal, lightweight message dispatcher/service API, providing multi-threaded event publishing and subscription for Ruby closure (Lambdas/Blocks) and Methods).
+The goal is to provide a minimal, lightweight message dispatcher/service API, providing multi-threaded event publishing and subscription for Ruby closures (Lambdas/Blocks) and Methods).
 
 ShortBus has no dependencies outside of the Ruby Core & Standard Libraries.
 

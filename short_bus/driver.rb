@@ -5,47 +5,39 @@ module ShortBus
   class Driver
     include DebugMessage
 
-    attr_reader :services, :threads
+    attr_reader :services
     attr_accessor :debug
 
+    DEFAULT_DRIVER_OPTIONS = {
+      debug: false,
+      default_event_spec: '**',
+      default_sender_spec: nil,
+      default_thread_count: 1
+    }
+
     def initialize(*options)
-      @options = { 
-        debug: false,
-        default_event_spec: '**',
-        default_sender_spec: nil,
-        default_thread_count: 1
-      }
-      @options.merge! options[0] if options[0]
+      @options = DEFAULT_DRIVER_OPTIONS
+      @options.merge! options[0] if options[0].is_a?(Hash)
       @debug = @options[:debug]
 
       @messages = Queue.new
       @services = {}
-      @threads = { route_message_loop: launch_route_message_loop }
+      @threads = { message_router: launch_message_router }
     end
 
     def register(*args, &block)
       service_args = {
         debug: @debug,
+        driver: self,
         event_spec: @options[:default_event_spec],
         name: nil,
         sender_spec: @options[:default_sender_spec],
-        service: nil,
+        service: block_given? ? block.to_proc : nil, 
         thread_count: @options[:default_thread_count],
       }.merge args[0].is_a?(Hash) ? args[0] : { service: args[0] }
 
-      service_args[:service] = block.to_proc if block_given?
-
       debug_message("#register service: #{service_args[:service]}")
-
-      service_ref = Service.new(
-        debug: service_args[:debug],
-        driver: self,
-        event_spec: service_args[:event_spec],
-        name: service_args[:name],
-        sender_spec: service_args[:sender_spec],
-        service: service_args[:service],
-        thread_count: service_args[:thread_count]
-      )
+      service_ref = Service.new(service_args)
       @services[service_ref.name] = service_ref
     end
 
@@ -83,17 +75,15 @@ module ShortBus
       end
     end
 
-    def launch_route_message_loop
+    def launch_message_router
       Thread.new do
-        loop { route_message @messages.shift }
+        loop do 
+          message = @messages.shift
+          debug_message "route_message(#{message})"
+          @services.values.each { |service| service.check message }
+        end
       end
     end
-
-    def route_message(message)
-      debug_message "route_message(#{message})"
-      @services.values.each { |service| service.check message }
-    end
-
   end
 end
 
