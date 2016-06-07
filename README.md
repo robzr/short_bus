@@ -7,16 +7,16 @@ The goal is to provide a minimal, lightweight message dispatcher/service API, pr
 ShortBus has no dependencies outside of the Ruby Core & Standard Libraries.
 
 ## What are the components?
-A service is a participant in the SOA (Service Oriented Architecture) for sending and/or receiving messages. To receive (subscribe to) messages, the service must be registered with the Driver; and is run as a callback in (one or more) dedicated thread(s).
+A service is a participant in the SOA (Service Oriented Architecture) for sending and/or receiving messages. To receive messages, the service must subscribe the Driver (Driver#subscribe); and is run as a callback in (one or more) dedicated thread(s).
 
-A message (ShortBus::Message) object is what is received, routed and sent to the recipient services by the Driver. A message is is composed of an event String and an optional payload object. Recipients can also return values back to the sender via the Message, as it is an inherited Queue (see "Message return values" below).
+A message (ShortBus::Message) object is what is received, routed and sent to the recipient services by the Driver. A message is is composed of an event String and an optional payload object. Subscribers can also return values back to the sender via the Message, as it is an inherited Queue (see "Message return values" below).
 
-The Driver (ShortBus::Driver) is the brains of the operation. Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate recipient service thread(s) based on the event\_spec(s) supplied by the service when it registered with the Driver.
+The Driver (ShortBus::Driver) is the brains of the operation. Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate subscribers based on the event\_spec(s) supplied by the service when it subscribed to the Driver.
 
 ## What does an event String and an event\_spec look like?
 In it's simplest form, an event can be a simple String like `'shutdown'`, but typically a more descriptive format is used which seperates component fields of the event with `::`s, like `'OwnerService::Action::Argument'`.
 
-An event\_spec can be supplied by the service when registering with the Driver, in order to select which events are received by the service. event\_specs can be a String (like: `'shutdown'`), a String with wildcards (`'OwnerService::**'`), a Regexp, or even an Array or Set of multiple Strings and/or Regexps.
+An event\_spec can be supplied by the service when subscribing in order to select which events are received by the service. event\_specs can be a String (like: `'shutdown'`), a String with wildcards (`'OwnerService::**'`), a Regexp, or even an Array or Set of multiple Strings and/or Regexps.
 
 ### Whats up with those wildcard Strings?
 To simplify filtering, a event\_spec String can contain a `*` or a `**` wildcard. A `*` wildcard matches just one field between `::` delimiters. A `**` wildcard matches one or more.
@@ -28,7 +28,7 @@ To simplify filtering, a event\_spec String can contain a `*` or a `**` wildcard
 Strings with wildcards are turned into Regexps by the Driver, but you may find them a little shorter and more readable.
 
 ## Message return values (Message as a Queue)
-Typically speaking, services participating in a SOA don't get immediate return values, since an SOA is asynchronous. But since ShortBus generally runs as a single "monolitic" application, we can cheat a bit for convenience, and pass return values back through the Message object (which is an inherited Queue class).
+Typically speaking, services participating in a SOA don't get immediate return values, since an SOA is asynchronous. But since ShortBus generally runs as a monolitic application, we can cheat a bit for convenience, and pass return values back through the Message object (which is an inherited Queue class).
 
 When a sender publishes a new Message, the return value is the Message itself. The sender can then pop() from the Message, which will block and wait for one of the recipients to push() a "return value" into the Message on the other side. To make things more flexible, pop() (and shift, deq) has been extended to accept a numeric value, which acts as a timeout in seconds.
 
@@ -43,21 +43,21 @@ require_relative 'short_bus'
 # First, instantiate the Driver and begin our monitoring thread.
 driver = ShortBus::Driver.new
 
-# Now let's register a simple service. All messages are received by default.
-driver.register lambda { |message|
+# Now let's subscribe a simple service. All messages are received by default.
+driver.subscribe lambda { |message|
   puts "This lambda receives ALL events, like this one: #{message}"
 }
 
-# Usually, you'll want to supply an event_spec when registering the service. You
-#   can also register a Block.  Upon finishing, we'll send a new message back to
-#   the Driver.
+# Usually, you'll want to supply an event_spec when subscribing. You can also
+#  subscribe a Block.  Upon finishing, we'll send a new message back to
+#  the Driver.
 #
-driver.register(event_spec: 'OtherService::**') do |message|
+driver.subscribe(event_spec: 'OtherService::**') do |message|
   puts "I receive only events from OtherService, like: #{message}"
   'ExampleBlock::ReturnValue::Unneccessary Text'
 end
 
-# Or, you can register a Method.  If the return value of any Service callback is
+# Or, you can subscribe a Method. If the return value of any Service callback is
 #   a String or a Hash with an :event key, it will be sent back to the Driver as
 #   a new message.
 #
@@ -65,14 +65,14 @@ def bob(message)
   puts "Bob likes a good message, like: #{message}"
   { event: "Bob::Reply", payload: "Hi, I love a good message." }
 end
-driver.register(service: method(:bob), event_spec: '*::GoodMessage::**')
+driver.subscribe(service: method(:bob), event_spec: '*::GoodMessage::**')
 
 # Here's a more complex (and typical) example.  We'll instantiate a new object
 #   allow it to process up to 5 messages simultaneously. This Class will need to
 #   be written to appropriately handle multiple threads.
 #
 some_cleaner = SomeModule::Cleaner.new
-driver.register(
+driver.subscribe(
   event_spec: ['*::Commands::Shut*', '*::Commands::Stop*'],
   service: some_cleaner.method(:message_handler),
   thread_count: 5
@@ -104,9 +104,9 @@ driver << new_message
 # We didn't talk about sender:'s, but they follow the same format as events,
 #   and can also be key'd on during registration with a sender_spec just like
 #   event_spec. Unlike an event however, the sender is automatically populated
-#   when a registered service sends a message to the Driver via a return value,
-#   and is used internally by the Driver to prevent an infinite loop of a
-#   service receiving the message it just sent.
+#   when a subscriber sends a message to the Driver via a return value, and is
+#   used internally by the Driver to prevent an infinite loop of a service
+#   receiving the message it just sent.
 
 # Finally, to read a return value from the passed Message Queue, just pop it off
 #   the return value from #send.
@@ -121,8 +121,7 @@ sleep
 
 ## TODO
 
-- rename send -> publish, register -> subscribe, unregister -> unsubscribe for consistency?
-- merge event with message for consistency?
+- merge/rename event to message for consistency?
 - object instantiation for callback if passed a class (maybe?)
 - consider making a mixin class for easier integration
 - make a Redis connector with JSON and binary-serialized object passing
