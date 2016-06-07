@@ -68,10 +68,10 @@ module ShortBus
         Message.new(arg)
       elsif arg.is_a?(Array) && arg[0].is_a?(String)
         Message.new(arg)
-      elsif arg.is_a?(Hash) && arg.has_key?(:event)
+      elsif arg.is_a?(Hash) && arg.has_key?(:name)
         publisher = arg.has_key?(:publisher) ? arg[:publisher] : nil
         payload = arg.has_key?(:payload) ? arg[:payload] : nil
-        Message.new(event: arg[:event], payload: payload, publisher: publisher)
+        Message.new(name: arg[:name], payload: payload, publisher: publisher)
       end
     end
 

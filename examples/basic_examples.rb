@@ -16,15 +16,15 @@ driver.subscribe lambda { |message| puts "Event Watcher lambda: #{message}" }
 #   the publisher attaches.
 #   
 driver.subscribe(message_spec: 'OtherService::Message::*') do |message|
-  puts "Block receives only events matching OtherService::Message::*, like #{message}"
+  puts "Block receives only messages matching OtherService::Message::*, like #{message}"
 end
 
-# If the return value of the Service hook is a String or a Hash with an :event 
+# If the return value of the Service hook is a String or a Hash with an :name 
 #   key, it will be sent back to the Driver as a new message.  In this case,
 #   our Service is a method, which is passed using the #method method.
 #
 def bob(message)
-  puts "Bob got the event #{message}!"
+  puts "Bob got the message #{message}!"
   ["Bob::Reply", "Thanks, I love a good message."]
 end
 
@@ -38,15 +38,15 @@ driver.subscribe(
 # Now, lets try a few messages and see what happens.
 #
 
-# In it's simplest form, we'll publish an event with no payload.
+# In it's simplest form, we'll publish an message with no payload.
 driver.publish 'Joe::GoodMessage::hi, bob'
 
-# Now we'll try a Hash, which includes an :event and a :payload.  Also notice
+# Now we'll try a Hash, which includes an :name and a :payload.  Also notice
 #   we can use the << alias for #publish.
 #
-driver << { event: 'OtherService::Message::Bob', payload: 'is your uncle' }
+driver << { name: 'OtherService::Message::Bob', payload: 'is your uncle' }
 
-# Let the previous event interactions complete.
+# Let the previous message interactions complete.
 sleep 0.1
 
 # And bid farewell.

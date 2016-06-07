@@ -29,7 +29,7 @@ module ShortBus
     end
 
     def monitor(message)
-      printf("->%s event = #{message}\n",
+      printf("->%s name = #{message}\n",
              @options[:name] ? "[#{@options[:name]}]" : '')
       if message.payload && !@suppress_payload
         puts "  -> payload = #{message.payload.inspect}"
