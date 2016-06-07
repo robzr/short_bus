@@ -2,40 +2,40 @@
 Multi-threaded pub-sub message dispatcher for implementing self-contained service-oriented Ruby apps.
 
 ## What does it do?
-The goal is to provide a minimal, lightweight message dispatcher/service API, providing multithreaded event publishing and subscription for Ruby closures (Lambdas/Blocks/Methods)
+The goal is to provide a minimal, lightweight message dispatcher/service API, providing multi-threaded event publishing and subscription for Ruby closure (Lambdas/Blocks) and Methods).
 
 ShortBus has no dependencies outside of the Ruby Core & Standard Libraries.
 
 ## What are the components?
-A Service is a participant in the SOA (Service Oriented Architecture) for sending and/or receiving Messages. To receive (subscribe to) messages, the Service must be registered with the Driver; and is run as a callback in (one or more) dedicated thread(s). The return value from a Service callback will be sent back to the Driver as a new message (if it is of the right type), so be mindful of your return values.
+A service is a participant in the SOA (Service Oriented Architecture) for sending and/or receiving messages. To receive (subscribe to) messages, the service must be registered with the Driver; and is run as a callback in (one or more) dedicated thread(s).
 
-A Message object is what is received, routed and sent to the recipient Services by the Driver. A Message is is composed of an event and an optional payload. Recipients of a message can also return values back to the sender via the Message, as it is an inherited Queue.
+A message (ShortBus::Message) object is what is received, routed and sent to the recipient services by the Driver. A message is is composed of an event String and an optional payload object. Recipients can also return values back to the sender via the Message, as it is an inherited Queue (see "Message return values" below).
 
-The Driver (ShortBus::Driver) is the brains of the operation. Once instantiated, a dedicated thread monitors the Message queue and routes the Messages to the appropriate recipient Service thread(s) based on the event\_spec(s) supplied by the Service when it registered with the Driver.
+The Driver (ShortBus::Driver) is the brains of the operation. Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate recipient service thread(s) based on the event\_spec(s) supplied by the service when it registered with the Driver.
 
-## What does an event and an event\_spec look like?
-An event is just a String. In it's simplest form, an entire event can be a simple String like `'shutdown'`, but typically a more descriptive form is used which seperates component fields of the event with `::`s, like `'OwnerService::Action::Argument::AnotherArgument'`.
+## What does an event String and an event\_spec look like?
+In it's simplest form, an event can be a simple String like `'shutdown'`, but typically a more descriptive format is used which seperates component fields of the event with `::`s, like `'OwnerService::Action::Argument'`.
 
-An event\_spec can be supplied by the Service when registering with the Driver, in order to select which events are received by the Service. event\_specs can be a simple String (like: `'shutdown'`), a String including wildcards (`'OwnerService::**'`), a Regexp, or even an Array or Set of multiple Strings and/or Regexps.
+An event\_spec can be supplied by the service when registering with the Driver, in order to select which events are received by the service. event\_specs can be a String (like: `'shutdown'`), a String with wildcards (`'OwnerService::**'`), a Regexp, or even an Array or Set of multiple Strings and/or Regexps.
 
-### Whats up with those wildcards?
-To simplify filtering, a EventSpec String can contain a `*` or a `**` wildcard. A `*` wildcard matches just one field between `::` delimiters. A `**` wildcard matches one or more.
+### Whats up with those wildcard Strings?
+To simplify filtering, a event\_spec String can contain a `*` or a `**` wildcard. A `*` wildcard matches just one field between `::` delimiters. A `**` wildcard matches one or more.
 
 `'Service::*'` matches `'Service::Start'`, but not `'Service::Start::Now'`
 
 `'Service::**'` matches both `'Service::Start'` and `'Service::Start::Now'`
 
-Strings with wildcards are turned into Regexps by the Driver. Wildcard Strings are just a little shorter and more readable.
+Strings with wildcards are turned into Regexps by the Driver, but you may find them a little shorter and more readable.
 
 ## Message return values (Message as a Queue)
-Typically speaking, Services participating in a SOA don't get immediate return values, since an SOA is asynchronous. But since ShortBus generally runs as a single "monolitic" application, we can cheat a bit for convenience, and pass return values back through the Message object (which is an inherited Queue class).
+Typically speaking, services participating in a SOA don't get immediate return values, since an SOA is asynchronous. But since ShortBus generally runs as a single "monolitic" application, we can cheat a bit for convenience, and pass return values back through the Message object (which is an inherited Queue class).
 
 When a sender publishes a new Message, the return value is the Message itself. The sender can then pop() from the Message, which will block and wait for one of the recipients to push() a "return value" into the Message on the other side. To make things more flexible, pop() (and shift, deq) has been extended to accept a numeric value, which acts as a timeout in seconds.
 
 If you don't want to use the Message return value functionality, you can ignore it, and Ruby's garbage collection will destroy the Message automatically once all recipient Services have completed.
 
 ## How do you use it?
-It's easy. Here's a self-explanatory example of a few Services that interact with each other.
+It's easy. Here's a self-explanatory example of a few services that interact with each other.
 
 ```ruby
 require_relative 'short_bus'
@@ -48,13 +48,13 @@ driver.register lambda { |message|
   puts "This lambda receives ALL events, like this one: #{message}"
 }
 
-# Usually, you'll want to supply an EventSpec when registering the service. You
+# Usually, you'll want to supply an event_spec when registering the service. You
 #   can also register a Block.  Upon finishing, we'll send a new message back to
 #   the Driver.
 #
 driver.register(event_spec: 'OtherService::**') do |message|
   puts "I receive only events from OtherService, like: #{message}"
-  'ExampleBlock::ReturnValue::Hi Guys'
+  'ExampleBlock::ReturnValue::Unneccessary Text'
 end
 
 # Or, you can register a Method.  If the return value of any Service callback is
