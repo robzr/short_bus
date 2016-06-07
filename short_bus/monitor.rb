@@ -41,11 +41,11 @@ module ShortBus
     end
 
     def start
-      @service = @driver.register(@options)
+      @service = @driver.subscribe(@options)
     end
 
     def stop
-      @driver.unregister @service
+      @driver.unsubscribe @service
     end
   end
 end

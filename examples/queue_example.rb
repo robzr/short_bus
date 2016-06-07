@@ -13,7 +13,7 @@ def house_cleaner(message)
   sleep 1
   exit
 end
-driver.register(
+driver.subscribe(
   event_spec: '*::Shutdown',
   service: method(:house_cleaner)
 )

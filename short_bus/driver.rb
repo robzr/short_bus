@@ -25,7 +25,7 @@ module ShortBus
       @threads = { message_router: launch_message_router }
     end
 
-    def register(*args, &block)
+    def subscribe(*args, &block)
       service_args = {
         debug: @debug,
         driver: self,
@@ -36,7 +36,7 @@ module ShortBus
         thread_count: @options[:default_thread_count],
       }.merge args[0].is_a?(Hash) ? args[0] : { service: args[0] }
 
-      debug_message("#register service: #{service_args[:service]}")
+      debug_message("#subscribe service: #{service_args[:service]}")
       service_ref = Service.new(service_args)
       @services[service_ref.name] = service_ref
     end
@@ -50,9 +50,9 @@ module ShortBus
 
     alias_method :<<, :send
 
-    def unregister(service)
+    def unsubscribe(service)
       if service.is_a? ShortBus::Service
-        unregister(service.name)
+        unsubscribe(service.name)
       elsif @services.has_key? service
         @services[service].stop
         @services.delete service
