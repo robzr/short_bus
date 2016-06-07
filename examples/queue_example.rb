@@ -13,12 +13,12 @@ def house_cleaner(message)
   sleep 1
   exit
 end
-driver.register(
+driver.subscribe(
   event_spec: '*::Shutdown',
   service: method(:house_cleaner)
 )
 
-return_message = driver.send('Everyone::Shutdown').shift
+return_message = driver.publish('Everyone::Shutdown').shift
 puts "I heard back from the house_cleaner, who says: #{return_message}"
 
 # sleep indefinitely, or until we somehow exit...

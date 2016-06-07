@@ -15,7 +15,7 @@ module ShortBus
       event_spec: nil,
       name: nil,
       recursive: false,
-      sender_spec: nil,
+      publisher_spec: nil,
       service: nil, 
       thread_count: 1
     )
@@ -23,7 +23,7 @@ module ShortBus
       @driver = driver
       @event_spec = event_spec ? Spec.new(event_spec) : nil
       @recursive = recursive
-      @sender_spec = sender_spec ? Spec.new(sender_spec) : nil
+      @publisher_spec = publisher_spec ? Spec.new(publisher_spec) : nil
       @service = service
       @thread_count = thread_count
 
@@ -35,8 +35,8 @@ module ShortBus
     
     def check(message)
       debug_message "[#{@name}]#check(#{message})"
-      if match_event(message.event) && match_sender(message.sender)
-        @run_queue << message if message.sender != @name || @recursive
+      if match_event(message.event) && match_publisher(message.publisher)
+        @run_queue << message if message.publisher != @name || @recursive
       end
     end
 
@@ -77,17 +77,17 @@ module ShortBus
       @event_spec ? @event_spec.match(event) : true
     end
 
-    def match_sender(sender)
-      @sender_spec ? @sender_spec.match(sender) : true
+    def match_publisher(publisher)
+      @publisher_spec ? @publisher_spec.match(publisher) : true
     end
 
     def run_service(message)
       debug_message "[#{@name}]#run_service(#{message}) -> #{@service.class.name} ##{@service.arity}"
       if @service.is_a?(Proc) || @service.is_a?(Method)
         if @service.arity == 0
-          @driver.send(message: @service.call, sender: @name)
+          @driver.publish(message: @service.call, publisher: @name)
         elsif [1, -1, -2].include? @service.arity
-          @driver.send(message: @service.call(message), sender: @name)
+          @driver.publish(message: @service.call(message), publisher: @name)
         else
           raise ArgumentError, "Service invalid arg count: #{@service.class.name}"
         end
