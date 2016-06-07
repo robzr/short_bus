@@ -19,7 +19,7 @@ driver.subscribe(
 driver.subscribe(
   debug: true, 
   name: 'got', 
-  sender_spec: 'lambie', 
+  publisher_spec: 'lambie', 
   thread_count: 2
 ) do |msg|
   sleep 0.5
@@ -31,7 +31,8 @@ driver.subscribe(
   event_spec: ['h**', '**::hello'],
   name: 'inline_bob'
 ) do |message|
-  puts "inline_bob received: Event(#{message}) from #{message.sender || 'Anonymous-Sender'}" 
+  puts("inline_bob received: Event(#{message}) from " +
+       message.publisher || 'Anonymous-Sender')
   puts "inline_bob received: Payload(#{message.payload})" if message.payload
   message << 'arbitrary object sent via Message'
   'new::message'
@@ -39,7 +40,7 @@ end
 
 Thread.new { 
   5.times do 
-    driver << "send::thread"
+    driver << "publish::thread"
     sleep 0.1
   end
 }

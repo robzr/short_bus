@@ -8,12 +8,12 @@ module ShortBus
         event_spec: nil,
         name: 'ShortBus::Monitor',
         suppress_payload: false,
-        suppress_sender: false,
-        sender_spec: nil,
+        suppress_publisher: false,
+        publisher_spec: nil,
         service: self.method(:monitor),
         thread_count: 1
       }
-      @suppress_payload, @suppress_sender = nil
+      @suppress_payload, @suppress_publisher = nil
       if args[0].is_a?(Hash) && args[0].has_key?(:driver)
         @options.merge! args[0]
         @driver = @options[:driver]
@@ -24,7 +24,7 @@ module ShortBus
         raise ArgumentError, 'No driver passed.'
       end
       @suppress_payload = @options.delete(:suppress_payload)
-      @suppress_sender = @options.delete(:suppress_sender)
+      @suppress_publisher = @options.delete(:suppress_publisher)
       start
     end
 
@@ -34,8 +34,11 @@ module ShortBus
       if message.payload && !@suppress_payload
         puts "  -> payload = #{message.payload.inspect}"
       end
-      if !@suppress_sender
-        puts "  ->  sender = #{message.sender ? message.sender : '*ANONYMOUS*'}"
+      if !@suppress_publisher
+        printf(
+          "  ->  publisher = %s\n",
+          message.publisher ? message.publisher : '*ANONYMOUS*'
+        )
       end
       nil
     end

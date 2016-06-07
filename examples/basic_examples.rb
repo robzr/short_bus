@@ -13,7 +13,7 @@ driver.subscribe lambda { |message| puts "Event Watcher lambda: #{message}" }
 # Usually, you'll supply an EventSpec so you don't process unnecessary messages.
 #   Driver can also take blocks.  If the Lambda/Block/Method takes two
 #   arguments, the second is the message payload, which can be any object that
-#   the sender attaches.
+#   the publisher attaches.
 #   
 driver.subscribe(event_spec: 'OtherService::Message::*') do |message|
   puts "Block receives only events matching OtherService::Message::*, like #{message}"
@@ -38,11 +38,11 @@ driver.subscribe(
 # Now, lets try a few messages and see what happens.
 #
 
-# In it's simplest form, we'll send an event with no payload.
-driver.send 'Joe::GoodMessage::hi, bob'
+# In it's simplest form, we'll publish an event with no payload.
+driver.publish 'Joe::GoodMessage::hi, bob'
 
 # Now we'll try a Hash, which includes an :event and a :payload.  Also notice
-#   we can use the << alias for #send.
+#   we can use the << alias for #publish.
 #
 driver << { event: 'OtherService::Message::Bob', payload: 'is your uncle' }
 

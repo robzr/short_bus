@@ -4,15 +4,15 @@ require 'timeout'
 # Queue, with a few mods
 #  - event (string)
 #  - optional payload (object)
-#  - sender (string or nil = anonymous)
+#  - publisher (string or nil = anonymous)
 #
 module ShortBus
   class Message < Queue
     attr_reader :event, :payload
-    attr_accessor :sender
+    attr_accessor :publisher
 
     def initialize(*args)
-      @event, @payload, @sender = nil
+      @event, @payload, @publisher = nil
       if process_args args
         super()
       else
@@ -50,7 +50,7 @@ module ShortBus
           @event = args[0]
         elsif args[0].is_a?(Hash) && args[0].has_key?(:event)
           @payload = args[0][:payload] if args[0].has_key?(:payload)
-          @sender = args[0][:sender] if args[0].has_key?(:sender)
+          @publisher = args[0][:publisher] if args[0].has_key?(:publisher)
           @event = args[0][:event]
         end
       end
