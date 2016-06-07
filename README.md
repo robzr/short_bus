@@ -7,11 +7,11 @@ The goal is to provide a minimal, lightweight message dispatcher/service API, pr
 ShortBus has no dependencies outside of the Ruby Core & Standard Libraries.
 
 ## What are the components?
-A Service is a participant in the SOA (Service Oriented Architecture) for sending and/or receiving events. Sending events can be done with the Driver#send method; the return value of this is the Message object, which can then be read as a Queue for a return code.  To receive messages (subscribe), the Service must be registered with the Driver; and is run as a callback in (one or more) dedicated thread(s). The return value from a Service callback will be sent back to the Driver as a new message (if it is of the right type), so be mindful of your return values.
+A Service is a participant in the SOA (Service Oriented Architecture) for sending and/or receiving Messages. To receive (subscribe to) messages, the Service must be registered with the Driver; and is run as a callback in (one or more) dedicated thread(s). The return value from a Service callback will be sent back to the Driver as a new message (if it is of the right type), so be mindful of your return values.
 
 A Message object is what is received, routed and sent to the recipient Services by the Driver. A Message is is composed of an event and an optional payload. Recipients of a message can also return values back to the sender via the Message, as it is an inherited Queue.
 
-The Driver (ShortBus::Driver) is the brains of the operation. Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate recipient Service thread(s) based on the event\_spec(s) supplied by the Service when it registered with the Driver.
+The Driver (ShortBus::Driver) is the brains of the operation. Once instantiated, a dedicated thread monitors the Message queue and routes the Messages to the appropriate recipient Service thread(s) based on the event\_spec(s) supplied by the Service when it registered with the Driver.
 
 ## What does an event and an event\_spec look like?
 An event is just a String. In it's simplest form, an entire event can be a simple String like `'shutdown'`, but typically a more descriptive form is used which seperates component fields of the event with `::`s, like `'OwnerService::Action::Argument::AnotherArgument'`.
@@ -27,12 +27,12 @@ To simplify filtering, a EventSpec String can contain a `*` or a `**` wildcard. 
 
 Strings with wildcards are turned into Regexps by the Driver. Wildcard Strings are just a little shorter and more readable.
 
-## Message return values (or, Message as a Queue)
-Typically speaking, Services participating in a SOA don't get immediate return values, since an SOA is asynchronous. But since ShortBus generally runs as a single "monolitic" application, we can cheat a bit for convenience, and pass return values back through the Message object.
+## Message return values (Message as a Queue)
+Typically speaking, Services participating in a SOA don't get immediate return values, since an SOA is asynchronous. But since ShortBus generally runs as a single "monolitic" application, we can cheat a bit for convenience, and pass return values back through the Message object (which is an inherited Queue class).
 
-When a sender publishes a new Message, the return value is the Message itself, which is an inherited Queue. So the sender can then pop() from the Message, which will block and wait for one of the recipients to push() a "return value" into the Message on the other side. To make things more flexible, you can pass pop() (or shift, deq) a numeric value, which acts as a timeout in seconds.
+When a sender publishes a new Message, the return value is the Message itself. The sender can then pop() from the Message, which will block and wait for one of the recipients to push() a "return value" into the Message on the other side. To make things more flexible, pop() (and shift, deq) has been extended to accept a numeric value, which acts as a timeout in seconds.
 
-If you don't want to use the Message return value functionality, you can ignore it, and Ruby's garbage collection will destroy the Message automatically.
+If you don't want to use the Message return value functionality, you can ignore it, and Ruby's garbage collection will destroy the Message automatically once all recipient Services have completed.
 
 ## How do you use it?
 It's easy. Here's a self-explanatory example of a few Services that interact with each other.
@@ -122,6 +122,7 @@ sleep
 ## TODO
 
 - rename send -> publish, register -> subscribe, unregister -> unsubscribe for consistency?
+- merge event with message for consistency?
 - object instantiation for callback if passed a class (maybe?)
 - consider making a mixin class for easier integration
 - make a Redis connector with JSON and binary-serialized object passing
