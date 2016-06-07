@@ -36,7 +36,7 @@ The publisher can then #pop from that Message, which will block and wait for one
 
   `return_val = driver.send('Testing::Message').pop(3)`
 
-If you don't want to use the Message return value functionality, you can ignore it, and Ruby's garbage collection will destroy the Message automatically once all subscriber callbacks have completed.
+If you don't want to use the Message return value functionality, you can ignore it, and Ruby's garbage collection will destroy the Message automatically when all subscriber callbacks have completed.
 
 ## How do you use it?
 It's easy. Here's a self-explanatory example of a few services that interact with each other.
