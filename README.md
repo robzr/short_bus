@@ -2,21 +2,21 @@
 Easy to use multi-threaded pub-sub message dispatcher for implementing self-contained service-oriented Ruby apps.
 
 ## What does it do?
-The goal is to provide a minimal, lightweight message dispatcher/service API, providing multi-threaded message publishing and subscription for Ruby closures (Lambdas/Blocks) and Methods).
+The goal is to provide a minimal, lightweight message dispatcher/service API, with multi-threaded message publishing and subscription for Ruby closures (Lambdas/Blocks) and Methods.
 
 ShortBus has no dependencies outside of the Ruby Core & Standard Libraries.
 
 ## What are the components?
-A service is a participant in the SOA (Service Oriented Architecture) for publishing and/or subscribing to messages. To receive messages, the service subscribes to the Driver (Driver#subscribe); and is run as a callback in (one or more) dedicated thread(s).
+A service is a participant in the SOA (Service Oriented Architecture) for publishing and/or subscribing to messages. To receive messages, the service subscribes to the Driver (Driver#subscribe); and is run as a callback in a dedicated thread or thread pool.
 
-A message (as simple as a String, but ultimately converted to a ShortBus::Message object) is what is received, routed and sent to the recipient services by the Driver. A message has a name (String) and an optional payload object. Subscribers can also return values back to the publisher directly through the Message, as it is an inherited Queue (see "Message return values" below).
+A message (as simple as a String, but ultimately converted to a ShortBus::Message object) is what is received, routed and sent to the recipient services by the Driver. A message can have an optional payload object, and subscribers can return values directly back to the publisher by using the Message object as a Queue (see "Message return values" below).
 
 The Driver (ShortBus::Driver) is the brains of the operation. Once instantiated, a dedicated thread monitors the incoming queue, converts and routes the messages to the appropriate subscribers based on the message\_spec(s) supplied at the time of subscription.
 
 ## What does a message and a message\_spec look like?
-In it's simplest form, a message can be a simple String like `'shutdown'`, but typically a more descriptive format is used which seperates component fields of the message with `::`s, like `'OwnerService::Action::Argument'`.  The Driver will convert the message String into a ShortBus::Message object during routing.
+In it's simplest form, a message can be a simple String like `'shutdown'`, but typically a more flexible, component based format is used, delimited by `::`, like `'OwnerService::Action::Argument'`.  The Driver will convert the message String into a ShortBus::Message object before routing.
 
-An message\_spec can be supplied by the service when subscribing in order to select which messages are received by the service. message\_specs can be a String (like: `'shutdown'`), a String with wildcards (`'OwnerService::**'`), a Regexp, or even an Array or Set of multiple Strings and/or Regexps.
+A message\_spec can be supplied by the service when subscribing in order to select which messages are received by the service. A message\_spec can be a String (`'shutdown'`), a String with wildcards (`'OwnerService::**'`), a Regexp, or even an Array or Set of multiple Strings and/or Regexps.
 
 ### Whats up with those wildcard Strings?
 To simplify filtering, a message\_spec String can contain a `*` or a `**` wildcard. A `*` wildcard matches just one field between `::` delimiters. A `**` wildcard matches one or more.
@@ -25,14 +25,14 @@ To simplify filtering, a message\_spec String can contain a `*` or a `**` wildca
 
 `'Service::**'` matches both `'Service::Start'` and `'Service::Start::Now'`
 
-Wilcard Strings are turned into Regexps by the Driver, but are more concise.
+Wilcard Strings are turned into Regexps by the Driver.
 
 ## Message return values (Message as a Queue)
-Typically speaking, services participating in a SOA don't get immediate return values, since an SOA is asynchronous. But since ShortBus generally runs as a monolitic application, we can cheat a bit for convenience, and pass return values back through the Message object (which is an inherited Queue class).
+Typically speaking, services participating in a SOA do not get immediate return values, as an SOA is asynchronous. Since ShortBus generally runs as a monolithic application, we can cheat a bit for convenience, and pass return values back through the Message object (which is an inherited Queue class).
 
-When a publisher publishes a new Message via the Driver#publish method, the return value is the same Message object that subscribers recieve.
+When a new Message is published via the Driver#publish method, the return value is the same Message object that subscribers receive.
 
-The publisher can then pop() from that Message, which will block and wait for one of the subscribers to push() a "return value" into the Message on the other side. To make things more flexible, pop() (and shift, deq) has been extended to accept a numeric value, which acts as a timeout in seconds.
+The publisher can then #pop from that Message, which will block and wait for one of the subscribers to #push a "return value" into the Message on the other side. To make things more flexible, #pop (and #shift, #deq) has been extended to accept a numeric value, which acts as a timeout in seconds.
 
 If you don't want to use the Message return value functionality, you can ignore it, and Ruby's garbage collection will destroy the Message automatically once all subscriber callbacks have completed.
 
@@ -56,12 +56,12 @@ driver.subscribe lambda { |message|
 #
 driver.subscribe(message_spec: 'OtherService::**') do |message|
   puts "I receive only messages from OtherService, like: #{message}"
-  'ExampleBlock::ReturnValue::Unneccessary Text'
+  'ExampleBlock::ReturnValue::Uneccessary Text'
 end
 
 # Or, you can subscribe a Method. If the return value of any Service callback is
-#   a String or a Hash with an :message key, it will be sent back to the Driver as
-#   a new message.
+#   a String, Array or a Hash with an :message key, it will be sent back to the
+#   Driver as a new message.
 #
 def bob(message)
   puts "Bob likes a good message, like: #{message}"
@@ -99,19 +99,20 @@ driver << {
 new_message = ShortBus::Message.new(
   message: 'Steve::GoodMessage::Your Uncle',
   payload: 'your_uncle',
-  sender: 'KindOfAnonymous::Sender'
+  publisher: 'KindOfAnonymous::Sender'
 )
 driver << new_message
 
-# We didn't talk about sender:'s, but they follow the same format as messages,
-#   and can also be key'd on during registration with a sender_spec just like
-#   message_spec. Unlike a message however, the sender is automatically populated
-#   when a subscriber sends a message to the Driver via a return value, and is
-#   used internally by the Driver to prevent an infinite loop of a service
-#   receiving the message it just sent.
+# The :publisher attribute follows the same format as a messages, and
+#   can also be keyed on during subscription with a publisher_spec,
+#   just like message_spec. Unlike a message, the publisher attribute
+#   is automatically populated when a subscriber sends a message to 
+#   the Driver via a return value. A service automatically has a 
+#   publisher name selected, but can also be specified at subscription
+#   time with the :name key.
 
-# Finally, to read a return value from the passed Message Queue, just pop it off
-#   the return value from #send.
+# Finally, to read a return value from the passed Message Queue, just
+#   pop it off the return value from #send.
 #
 unless driver.send('Controller::Shutdown::Gracefully').shift(5)
   puts "I don't think anyone received our message..."
@@ -122,9 +123,8 @@ sleep
 ```
 
 ## TODO
-
-- object instantiation for callback if passed a class (maybe?)
-- consider making a mixin class for easier integration
-- make a Redis connector with JSON and binary-serialized object passing
+- class based services (object instantiation on callback)
+- mixin class for easier integration
+- Redis connector with JSON and binary-serialized object passing
 - cascade block to Service object to avoid block.to\_proc slowdown
-- properly document, make gem, publish
+- document, make gem, publish
