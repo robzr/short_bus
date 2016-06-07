@@ -14,7 +14,7 @@ def house_cleaner(message)
   exit
 end
 driver.subscribe(
-  event_spec: '*::Shutdown',
+  message_spec: '*::Shutdown',
   service: method(:house_cleaner)
 )
 

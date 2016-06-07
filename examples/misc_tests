@@ -22,13 +22,13 @@ driver.subscribe(
   publisher_spec: 'lambie', 
   thread_count: 2
 ) do |msg|
-  sleep 0.5
+  sleep 0.3
   puts "anon-1 #{msg}"
   nil
 end
 
 driver.subscribe(
-  event_spec: ['h**', '**::hello'],
+  message_spec: ['h**', '**::hello'],
   name: 'inline_bob'
 ) do |message|
   puts("inline_bob received: Event(#{message}) from " +
@@ -41,16 +41,16 @@ end
 Thread.new { 
   5.times do 
     driver << "publish::thread"
-    sleep 0.1
+    sleep 0.15
   end
 }
 
 first_message = driver << ["hi::bob", "potato"]
-sleep 0.15
+sleep 0.2
 driver << ["hello::jim", "pot"]
-sleep 0.15
+sleep 0.2
 driver << ["hola::xxx", "stew"]
 
 puts "Shift-back from first message #{first_message.shift(2)}"
 
-sleep 2
+sleep 1

@@ -2,17 +2,17 @@ require 'pp'
 require 'timeout'
 
 # Queue, with a few mods
-#  - event (string)
+#  - name (string)
 #  - optional payload (object)
 #  - publisher (string or nil = anonymous)
 #
 module ShortBus
   class Message < Queue
-    attr_reader :event, :payload
+    attr_reader :name, :payload
     attr_accessor :publisher
 
     def initialize(*args)
-      @event, @payload, @publisher = nil
+      @name, @payload, @publisher = nil
       if process_args args
         super()
       else
@@ -35,7 +35,7 @@ module ShortBus
     alias_method :deq, :pop
 
     def to_s
-      @event
+      @name
     end
 
     private
@@ -47,11 +47,11 @@ module ShortBus
         elsif args[0].is_a? String
           @payload = args[1] if args.length == 2
           @payload = args.slice(1..-1) if args.length > 2
-          @event = args[0]
-        elsif args[0].is_a?(Hash) && args[0].has_key?(:event)
+          @name = args[0]
+        elsif args[0].is_a?(Hash) && args[0].has_key?(:name)
           @payload = args[0][:payload] if args[0].has_key?(:payload)
           @publisher = args[0][:publisher] if args[0].has_key?(:publisher)
-          @event = args[0][:event]
+          @name = args[0][:name]
         end
       end
     end

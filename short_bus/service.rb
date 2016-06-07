@@ -12,7 +12,7 @@ module ShortBus
     def initialize(
       debug: false,
       driver: nil,
-      event_spec: nil,
+      message_spec: nil,
       name: nil,
       recursive: false,
       publisher_spec: nil,
@@ -21,7 +21,7 @@ module ShortBus
     )
       @debug = debug
       @driver = driver
-      @event_spec = event_spec ? Spec.new(event_spec) : nil
+      @message_spec = message_spec ? Spec.new(message_spec) : nil
       @recursive = recursive
       @publisher_spec = publisher_spec ? Spec.new(publisher_spec) : nil
       @service = service
@@ -35,7 +35,7 @@ module ShortBus
     
     def check(message)
       debug_message "[#{@name}]#check(#{message})"
-      if match_event(message.event) && match_publisher(message.publisher)
+      if match_name(message.name) && match_publisher(message.publisher)
         @run_queue << message if message.publisher != @name || @recursive
       end
     end
@@ -73,8 +73,8 @@ module ShortBus
 
     private
 
-    def match_event(event)
-      @event_spec ? @event_spec.match(event) : true
+    def match_name(name)
+      @message_spec ? @message_spec.match(name) : true
     end
 
     def match_publisher(publisher)
