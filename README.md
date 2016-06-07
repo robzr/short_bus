@@ -130,8 +130,10 @@ sleep
 ```
 
 ## TODO
-- class based services (object instantiation on callback)
-- mixin class for easier integration
-- Redis connector with JSON and binary-serialized object passing
-- cascade block to Service object to avoid block.to\_proc slowdown
-- document, make gem, publish
+- HIGH: make mixin for easier integration (provide #driver #publish #register #unregister; callback method -> #subscribe)
+- HIGH: create class for automated benchmarking & testing
+- HIGH: make examples easier to read, smaller, more repeatable
+- MEDIUM: cascade block to Service object to avoid block.to\_proc slowdown
+- MEDIUM: document api , make gem, publish
+- LOW: Redis connector with JSON and binary-serialized object passing
+- LOW: class based services (object instantiation on callback -> ?)
