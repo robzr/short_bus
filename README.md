@@ -34,6 +34,8 @@ When a new Message is published via the Driver#publish method, the return value 
 
 The publisher can then #pop from that Message, which will block and wait for one of the subscribers to #push a "return value" into the Message on the other side. To make things more flexible, #pop (and #shift, #deq) has been extended to accept a numeric value, which acts as a timeout in seconds.
 
+  `return_val = driver.send('Testing::Message').pop(3)`
+
 If you don't want to use the Message return value functionality, you can ignore it, and Ruby's garbage collection will destroy the Message automatically once all subscriber callbacks have completed.
 
 ## How do you use it?
