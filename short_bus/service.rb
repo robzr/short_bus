@@ -4,10 +4,6 @@ require 'set'
 require 'openssl'
 
 module ShortBus
-
-  class ServiceThreadDone < ThreadError
-  end
-
   class Service
     include DebugMessage
 
@@ -45,51 +41,30 @@ module ShortBus
       end
     end
 
-    # TODO: redo Exception handling with a whitelist, pass exceptions upstream
-    #   or add options for exception logging. Figure out something clean....
+    # TODO: consider some mechanism to pass Exceptions up to the main thread,
+    #   perhaps with a whitelist, optional logging, something clean.
     def service_thread
       Thread.new do 
         begin
           loop { run_service @run_queue.shift }
-        rescue Exception => e
-          # TODO: add exception reporting/upstream raising to Driver thread
-          puts "[#{@name}]service_thread => #{e.inspect}"
-          #retry
-        ensure
-          # TODO: replace with rescue / retry ?
-          if @thread_launcher
-            @thread_launcher.raise(ServiceThreadDone, Thread.current)
-          end
+        rescue Exception => exc
+          debug_message "[#{@name}]service_thread => #{exc.inspect}"
+          abort if exc.is_a? SystemExit
+          retry
         end 
       end 
     end
 
     def start
-      @thread_launcher = Thread.new do 
-        loop do 
-          begin
-            @threads.delete_if { |thread| !thread.alive? }
-            @threads << service_thread while @threads.length < @thread_count
-            sleep
-          rescue ShortBus::ServiceThreadDone => exc
-            debug_message "[#{@name}]#start ServiceThreadDone => #{exc.inspect}"
-          rescue Exception => exc
-            abort "Service::start Exception: #{exc.inspect}"
-          end
-        end
-      end
+      #@threads.delete_if { |thread| !thread.alive? }
+      @threads << service_thread while @threads.length < @thread_count
     end
 
     def stop
-      if @thread_launcher
-        @thread_launcher.kill if @thread_launcher.alive?
-        @threads.each_index do |index|
-          @threads[index].kill
-          @threads[index].join
-          @threads.delete index
-        end
-        @thread_launcher.join
-        @thread_launcher = nil
+      @threads.each_index do |index|
+        @threads[index].kill
+        @threads[index].join
+        @threads.delete index
       end
     end
 
