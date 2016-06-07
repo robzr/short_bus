@@ -32,10 +32,11 @@ module ShortBus
         message_spec: @options[:default_message_spec],
         name: nil,
         publisher_spec: @options[:default_publisher_spec],
-        service: block_given? ? block.to_proc : nil, 
+        service: nil,
         thread_count: @options[:default_thread_count],
       }.merge args[0].is_a?(Hash) ? args[0] : { service: args[0] }
 
+      service_args[:service] = block.to_proc if block_given?
       debug_message("#subscribe service: #{service_args[:service]}")
       service_ref = Service.new(service_args)
       @services[service_ref.name] = service_ref
