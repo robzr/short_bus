@@ -10,7 +10,7 @@ module ShortBus
 
     DEFAULT_DRIVER_OPTIONS = {
       debug: false,
-      default_event_spec: '**',
+      default_message_spec: '**',
       default_publisher_spec: nil,
       default_thread_count: 1
     }
@@ -29,7 +29,7 @@ module ShortBus
       service_args = {
         debug: @debug,
         driver: self,
-        event_spec: @options[:default_event_spec],
+        message_spec: @options[:default_message_spec],
         name: nil,
         publisher_spec: @options[:default_publisher_spec],
         service: block_given? ? block.to_proc : nil, 

@@ -48,11 +48,11 @@ driver.subscribe lambda { |message|
   puts "This lambda receives ALL events, like this one: #{message}"
 }
 
-# Usually, you'll want to supply an event_spec when subscribing. You can also
+# Usually, you'll want to supply an message_spec when subscribing. You can also
 #  subscribe a Block.  Upon finishing, we'll send a new message back to
 #  the Driver.
 #
-driver.subscribe(event_spec: 'OtherService::**') do |message|
+driver.subscribe(message_spec: 'OtherService::**') do |message|
   puts "I receive only events from OtherService, like: #{message}"
   'ExampleBlock::ReturnValue::Unneccessary Text'
 end
@@ -65,7 +65,7 @@ def bob(message)
   puts "Bob likes a good message, like: #{message}"
   { event: "Bob::Reply", payload: "Hi, I love a good message." }
 end
-driver.subscribe(service: method(:bob), event_spec: '*::GoodMessage::**')
+driver.subscribe(service: method(:bob), message_spec: '*::GoodMessage::**')
 
 # Here's a more complex (and typical) example.  We'll instantiate a new object
 #   allow it to process up to 5 messages simultaneously. This Class will need to
@@ -73,7 +73,7 @@ driver.subscribe(service: method(:bob), event_spec: '*::GoodMessage::**')
 #
 some_cleaner = SomeModule::Cleaner.new
 driver.subscribe(
-  event_spec: ['*::Commands::Shut*', '*::Commands::Stop*'],
+  message_spec: ['*::Commands::Shut*', '*::Commands::Stop*'],
   service: some_cleaner.method(:message_handler),
   thread_count: 5
 )
@@ -103,7 +103,7 @@ driver << new_message
 
 # We didn't talk about sender:'s, but they follow the same format as events,
 #   and can also be key'd on during registration with a sender_spec just like
-#   event_spec. Unlike an event however, the sender is automatically populated
+#   message_spec. Unlike an event however, the sender is automatically populated
 #   when a subscriber sends a message to the Driver via a return value, and is
 #   used internally by the Driver to prevent an infinite loop of a service
 #   receiving the message it just sent.

@@ -12,7 +12,7 @@ module ShortBus
     def initialize(
       debug: false,
       driver: nil,
-      event_spec: nil,
+      message_spec: nil,
       name: nil,
       recursive: false,
       publisher_spec: nil,
@@ -21,7 +21,7 @@ module ShortBus
     )
       @debug = debug
       @driver = driver
-      @event_spec = event_spec ? Spec.new(event_spec) : nil
+      @message_spec = message_spec ? Spec.new(message_spec) : nil
       @recursive = recursive
       @publisher_spec = publisher_spec ? Spec.new(publisher_spec) : nil
       @service = service
@@ -74,7 +74,7 @@ module ShortBus
     private
 
     def match_event(event)
-      @event_spec ? @event_spec.match(event) : true
+      @message_spec ? @message_spec.match(event) : true
     end
 
     def match_publisher(publisher)

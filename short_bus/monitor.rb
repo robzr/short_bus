@@ -5,7 +5,7 @@ module ShortBus
 
     def initialize(*args)
       @options = {
-        event_spec: nil,
+        message_spec: nil,
         name: 'ShortBus::Monitor',
         suppress_payload: false,
         suppress_publisher: false,

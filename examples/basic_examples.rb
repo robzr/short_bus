@@ -7,15 +7,15 @@ require_relative '../short_bus'
 # Instantiate our Driver and begin our monitoring thread.
 driver = ShortBus::Driver.new
 
-# Register a Lambda service.  Default EventSpec receives all messages.
+# Register a Lambda service.  Default message_spec receives all messages.
 driver.subscribe lambda { |message| puts "Event Watcher lambda: #{message}" }
 
-# Usually, you'll supply an EventSpec so you don't process unnecessary messages.
+# Usually, you'll supply an message_spec so you don't process unnecessary messages.
 #   Driver can also take blocks.  If the Lambda/Block/Method takes two
 #   arguments, the second is the message payload, which can be any object that
 #   the publisher attaches.
 #   
-driver.subscribe(event_spec: 'OtherService::Message::*') do |message|
+driver.subscribe(message_spec: 'OtherService::Message::*') do |message|
   puts "Block receives only events matching OtherService::Message::*, like #{message}"
 end
 
@@ -28,9 +28,9 @@ def bob(message)
   ["Bob::Reply", "Thanks, I love a good message."]
 end
 
-# We'll subscribe with an array of event_specs this time.
+# We'll subscribe with an array of message_specs this time.
 driver.subscribe(
-  event_spec: ['*::GoodMessage::**', '**::Bob'],
+  message_spec: ['*::GoodMessage::**', '**::Bob'],
   service: method(:bob)
 )
 
@@ -57,4 +57,4 @@ sleep 0.1
 # If you run this a few times, you'll see the messages do not print out in the
 #   same order.  Welcome to the joys of multi-threaded programming :)  The only
 #   guarantee that ShortBus offers is that each Service receives the messages 
-#   that meet its EventSpec in sequence.
+#   that meet its message_spec in sequence.
