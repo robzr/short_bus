@@ -39,7 +39,6 @@ The publisher can then #pop from that Message, which will block and wait for one
 If you don't want to use the Message return value functionality, you can ignore it, and Ruby's garbage collection will destroy the Message automatically when all subscriber callbacks have completed.
 
 ## How do you use it?
-It's easy. Here's a self-explanatory example of a few services that interact with each other.
 
 ```ruby
 require_relative 'short_bus'
@@ -49,7 +48,7 @@ driver = ShortBus::Driver.new
 
 # Now let's subscribe a simple service. All messages are received by default.
 driver.subscribe lambda { |message|
-  puts "This lambda receives ALL message, like this one: #{message}"
+  puts "This lambda receives ALL messages, like this one: #{message}"
 }
 
 # Usually, you'll want to supply a message_spec when subscribing. You can also
