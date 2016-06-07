@@ -1,5 +1,5 @@
 # ShortBus
-Multi-threaded pub-sub message dispatcher for implementing self-contained service-oriented Ruby apps.
+Easy to use multi-threaded pub-sub message dispatcher for implementing self-contained service-oriented Ruby apps.
 
 ## What does it do?
 The goal is to provide a minimal, lightweight message dispatcher/service API, providing multi-threaded message publishing and subscription for Ruby closures (Lambdas/Blocks) and Methods).
@@ -7,14 +7,14 @@ The goal is to provide a minimal, lightweight message dispatcher/service API, pr
 ShortBus has no dependencies outside of the Ruby Core & Standard Libraries.
 
 ## What are the components?
-A service is a participant in the SOA (Service Oriented Architecture) for sending and/or receiving messages. To receive messages, the service must subscribe the Driver (Driver#subscribe); and is run as a callback in (one or more) dedicated thread(s).
+A service is a participant in the SOA (Service Oriented Architecture) for publishing and/or subscribing to messages. To receive messages, the service subscribes to the Driver (Driver#subscribe); and is run as a callback in (one or more) dedicated thread(s).
 
-A message (ShortBus::Message) object is what is received, routed and sent to the recipient services by the Driver. A message is is composed of a String and an optional payload object. Subscribers can also return values back to the sender via the Message, as it is an inherited Queue (see "Message return values" below).
+A message (as simple as a String, but ultimately converted to a ShortBus::Message object) is what is received, routed and sent to the recipient services by the Driver. A message has a name (String) and an optional payload object. Subscribers can also return values back to the publisher directly through the Message, as it is an inherited Queue (see "Message return values" below).
 
-The Driver (ShortBus::Driver) is the brains of the operation. Once instantiated, a dedicated thread monitors the message queue and routes the messages to the appropriate subscribers based on the message\_spec(s) supplied by the service when it subscribed to the Driver.
+The Driver (ShortBus::Driver) is the brains of the operation. Once instantiated, a dedicated thread monitors the incoming queue, converts and routes the messages to the appropriate subscribers based on the message\_spec(s) supplied at the time of subscription.
 
-## What does a message String and a message\_spec look like?
-In it's simplest form, a message can be a simple String like `'shutdown'`, but typically a more descriptive format is used which seperates component fields of the message with `::`s, like `'OwnerService::Action::Argument'`.
+## What does a message and a message\_spec look like?
+In it's simplest form, a message can be a simple String like `'shutdown'`, but typically a more descriptive format is used which seperates component fields of the message with `::`s, like `'OwnerService::Action::Argument'`.  The Driver will convert the message String into a ShortBus::Message object during routing.
 
 An message\_spec can be supplied by the service when subscribing in order to select which messages are received by the service. message\_specs can be a String (like: `'shutdown'`), a String with wildcards (`'OwnerService::**'`), a Regexp, or even an Array or Set of multiple Strings and/or Regexps.
 
@@ -25,14 +25,16 @@ To simplify filtering, a message\_spec String can contain a `*` or a `**` wildca
 
 `'Service::**'` matches both `'Service::Start'` and `'Service::Start::Now'`
 
-Strings with wildcards are turned into Regexps by the Driver, but you may find them a little shorter and more readable.
+Wilcard Strings are turned into Regexps by the Driver, but are more concise.
 
 ## Message return values (Message as a Queue)
 Typically speaking, services participating in a SOA don't get immediate return values, since an SOA is asynchronous. But since ShortBus generally runs as a monolitic application, we can cheat a bit for convenience, and pass return values back through the Message object (which is an inherited Queue class).
 
-When a sender publishes a new Message, the return value is the Message itself. The sender can then pop() from the Message, which will block and wait for one of the recipients to push() a "return value" into the Message on the other side. To make things more flexible, pop() (and shift, deq) has been extended to accept a numeric value, which acts as a timeout in seconds.
+When a publisher publishes a new Message via the Driver#publish method, the return value is the same Message object that subscribers recieve.
 
-If you don't want to use the Message return value functionality, you can ignore it, and Ruby's garbage collection will destroy the Message automatically once all recipient Services have completed.
+The publisher can then pop() from that Message, which will block and wait for one of the subscribers to push() a "return value" into the Message on the other side. To make things more flexible, pop() (and shift, deq) has been extended to accept a numeric value, which acts as a timeout in seconds.
+
+If you don't want to use the Message return value functionality, you can ignore it, and Ruby's garbage collection will destroy the Message automatically once all subscriber callbacks have completed.
 
 ## How do you use it?
 It's easy. Here's a self-explanatory example of a few services that interact with each other.
@@ -53,17 +55,17 @@ driver.subscribe lambda { |message|
 #  the Driver.
 #
 driver.subscribe(message_spec: 'OtherService::**') do |message|
-  puts "I receive only message from OtherService, like: #{message}"
+  puts "I receive only messages from OtherService, like: #{message}"
   'ExampleBlock::ReturnValue::Unneccessary Text'
 end
 
 # Or, you can subscribe a Method. If the return value of any Service callback is
-#   a String or a Hash with an :name key, it will be sent back to the Driver as
+#   a String or a Hash with an :message key, it will be sent back to the Driver as
 #   a new message.
 #
 def bob(message)
   puts "Bob likes a good message, like: #{message}"
-  { name: "Bob::Reply", payload: "Hi, I love a good message." }
+  { message: "Bob::Reply", payload: "Hi, I love a good message." }
 end
 driver.subscribe(service: method(:bob), message_spec: '*::GoodMessage::**')
 
@@ -89,13 +91,13 @@ driver.send('Steve::GoodMessage::Your Uncle', payload_object)
 
 # Passing a labeled hash makes things a bit easier to read
 driver << { 
-  name: 'Steve::GoodMessage::Your Uncle',
+  message: 'Steve::GoodMessage::Your Uncle',
   payload: payload_object
 }
 
 # Or you can declare a Message object and send that manually
 new_message = ShortBus::Message.new(
-  name: 'Steve::GoodMessage::Your Uncle',
+  message: 'Steve::GoodMessage::Your Uncle',
   payload: 'your_uncle',
   sender: 'KindOfAnonymous::Sender'
 )
