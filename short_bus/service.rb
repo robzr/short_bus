@@ -17,6 +17,7 @@ module ShortBus
       recursive: false,
       publisher_spec: nil,
       service: nil, 
+      suppress_exception: false,
       thread_count: 1
     )
       @debug = debug
@@ -51,7 +52,8 @@ module ShortBus
         begin
           loop { run_service @run_queue.shift }
         rescue Exception => exc
-          debug_message "[#{@name}]service_thread => #{exc.inspect}"
+          puts "Service [#{@name}] => #{exc.inspect}" unless @suppress_exception
+          #debug_message "[#{@name}]service_thread => #{exc.inspect}"
           abort if exc.is_a? SystemExit
           retry
         end 
