@@ -44,89 +44,52 @@ If you don't want to use the Message return value functionality, you can ignore 
 ## How do you use it?
 
 ```ruby
-require_relative 'short_bus'
+require_relative '../short_bus'
 
-# First, instantiate the Driver and begin our monitoring thread.
+# Instantiate Driver, start message routing thread
+#
 driver = ShortBus::Driver.new
 
-# Now let's subscribe a simple service. All messages are received by default.
-driver.subscribe lambda { |message|
-  puts "This lambda receives ALL messages, like this one: #{message}"
-}
-
-# Usually, you'll want to supply a message_spec when subscribing. You can also
-#  subscribe a Block.  Upon finishing, we'll send a new message back to
-#  the Driver.
+# Subscribes a block to all messages (no filtering)
 #
-driver.subscribe(message_spec: 'OtherService::**') do |message|
-  puts "I receive only messages from OtherService, like: #{message}"
-  'ExampleBlock::ReturnValue::Unnecessary Text'
+driver.subscribe { |message| puts "1. I like all foods, including #{message}" }
+
+# Subscribes a block with a message_spec filtering only some messages
+#   Also, replies back to the driver with a new message.
+#
+driver.subscribe(message_spec: 'Chocolate::**') do |message|
+  puts "2. Did I hear you say Chocolate?  (#{message}). I know what I'm making."
+  'Chocolate::And::Strawberries'
 end
 
-# Or, you can subscribe a Method. If the return value of any Service callback is
-#   a String, Array or a Hash with an :message key, it will be sent back to the
-#   Driver as a new message.
+# Subscribes a block with a message_spec filtering only some messages
 #
-def bob(message)
-  puts "Bob likes message. #{message}"
-  { message: "Bob::Reply", payload: "Thank for message you." }
-end
-driver.subscribe(service: method(:bob), message_spec: '*::GoodMessage::**')
-
-# Here's a more complex (and typical) example.  We'll instantiate a new object
-#   allow it to process up to 5 messages simultaneously. This Class will need to
-#   be written to appropriately handle multiple threads.
-#
-some_cleaner = SomeModule::Cleaner.new
-driver.subscribe(
-  message_spec: ['*::Commands::Shut*', '*::Commands::Stop*'],
-  service: some_cleaner.method(:message_handler),
-  thread_count: 5
-)
-
-# Now, send a simple message to the Driver
-driver.send 'Simple Message'
-
-# << is an alias for send
-driver << 'NewService::SimpleMessage::Arg'
-
-# Or, attach a payload object
-driver.send 'NewService::SimpleMessage::Arg', payload_object
-
-# Arrays can be passed
-driver << ['NewService::SimpleMessage::Arg', payload_object]
-
-# A hash makes things a bit easier to read
-driver << { 
-  message: 'NewService::SimpleMessage::Arg',
-  payload: payload_object
-}
-
-# Or you can declare a Message object yourself
-new_message = ShortBus::Message.new(
-  message: 'NewService::SimpleMessage::Arg', 
-  payload: payload_object,
-  publisher: 'Semi::Anonymous::Publisher'
-)
-driver << new_message
-
-# The :publisher attribute follows the same format as a messages, and
-#   can also be keyed on during subscription with a publisher_spec,
-#   just like message_spec. Unlike a message, the publisher attribute
-#   is automatically populated when a subscriber sends a message to 
-#   the Driver via a return value. A service automatically has a 
-#   publisher name selected, but can also be specified at subscription
-#   time with the :name key.
-
-# Finally, to read a return value from the passed Message Queue, just
-#   pop it off the return value from #send.
-#
-unless driver.send('Controller::Shutdown::Gracefully').shift(5)
-  puts "I don't think anyone received our message..."
+driver.subscribe(message_spec: '**::Strawberries') do |message|
+  puts "3. I only care about Strawberries: #{message}"
+  'Strawberries'
 end
 
-# Sleep indefinitely, and let the Services do their work.
-sleep
+# First lets just test it with an unrelated message
+#
+driver.publish 'Cookies::And::Cream'
+sleep 0.1
+puts
+
+# Now lets try some interaction going between services
+#
+driver.publish 'Chocolate::Anything'
+sleep 0.1
+```
+And here's what it looks like when we run it:
+
+```
+1. I like all foods, including Cookies::And::Cream
+
+1. I like all foods, including Chocolate::Anything
+2. Did I hear you say Chocolate?  (Chocolate::Anything). I know what I'm making.
+1. I like all foods, including Chocolate::And::Strawberries
+3. I only care about Strawberries: Chocolate::And::Strawberries
+1. I like all foods, including Strawberries
 ```
 
 ## TODO
@@ -137,3 +100,4 @@ sleep
 - MEDIUM: document api , make gem, publish
 - LOW: Redis connector with JSON and binary-serialized object passing
 - LOW: class based services (object instantiation on callback -> ?)
+
