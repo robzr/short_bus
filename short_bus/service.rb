@@ -34,14 +34,18 @@ module ShortBus
       start
     end
     
-    def check(message)
-      debug_message "[#{@name}]#check(#{message})"
-      if(
-        (!@message_spec || @message_spec.match(message.to_s)) &&
-        (!@publisher_spec || @publisher_spec.match(message.publisher)) &&
-        (message.publisher != @name || @recursive)
-      )
-        @run_queue << message 
+    def check(*args)
+      dry_run = (args.length > 0 && args[0] == :dry_run)
+      args.reduce(false) do |acc, arg| 
+        debug_message "[#{@name}]#check(#{message})"
+        acc || if(
+          arg.is_a?(ShortBus::Message) &&
+          (!@message_spec || @message_spec.match(message.to_s)) &&
+          (!@publisher_spec || @publisher_spec.match(message.publisher)) &&
+          (message.publisher != @name || @recursive)
+        )
+          @run_queue << message unless dry_run
+        end
       end
     end
 
