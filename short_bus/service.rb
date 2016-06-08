@@ -34,43 +34,59 @@ module ShortBus
       start
     end
     
-    def check(message)
-      debug_message "[#{@name}]#check(#{message})"
-      if(
-        (!@message_spec || @message_spec.match(message.to_s)) &&
-        (!@publisher_spec || @publisher_spec.match(message.publisher)) &&
-        (message.publisher != @name || @recursive)
-      )
-        @run_queue << message 
+    def check(*args)
+      dry_run = (args.length > 0 && args[0] == :dry_run)
+      args.reduce(false) do |acc, arg| 
+        debug_message "[#{@name}]#check(#{message})"
+        acc || if(
+          arg.is_a?(ShortBus::Message) &&
+          (!@message_spec || @message_spec.match(message.to_s)) &&
+          (!@publisher_spec || @publisher_spec.match(message.publisher)) &&
+          (message.publisher != @name || @recursive)
+        )
+          @run_queue << message unless dry_run
+        end
       end
     end
 
     # TODO: consider some mechanism to pass Exceptions up to the main thread,
     #   perhaps with a whitelist, optional logging, something clean.
+    #
     def service_thread
       Thread.new do 
         begin
-          loop { run_service @run_queue.shift }
+          run_service @run_queue.shift until Thread.current.key?(:stop) 
         rescue Exception => exc
           puts "Service [#{@name}] => #{exc.inspect}" unless @suppress_exception
-          #debug_message "[#{@name}]service_thread => #{exc.inspect}"
           abort if exc.is_a? SystemExit
-          retry
+          retry unless Thread.current.key?(:stop)
         end 
       end 
     end
 
     def start
-      #@threads.delete_if { |thread| !thread.alive? }
       @threads << service_thread while @threads.length < @thread_count
     end
 
-    def stop
-      @threads.each_index do |index|
-        @threads[index].kill
-        @threads[index].join
-        @threads.delete index
+    def stop(when=nil)
+      @threads.each do |thread|
+        if when.is_a? Numeric
+          begin
+            Timeout.timeout(when) { stop }
+          rescue Timeout::Error
+            stop :now
+          end
+        elsif when == :now   
+          thread.kill
+        else
+          thread[:stop] = true
+        end
       end
+      @threads.delete_if { |thread| @threads[index].join }
+    end
+
+    def stop!
+      stop :now
     end
 
     def to_s

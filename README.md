@@ -96,6 +96,7 @@ And here's what it looks like when we run it:
 - HIGH: make mixin for easier integration (provide #driver #publish #register #unregister; callback method -> #subscribe)
 - HIGH: create class for automated benchmarking & testing
 - HIGH: make examples easier to read, smaller, more repeatable
+- MEDIUM: convert all Queue's to SizedQueue's, with reasonable/adjustable limits
 - MEDIUM: cascade block to Service object to avoid block.to\_proc slowdown
 - MEDIUM: document api , make gem, publish
 - LOW: Redis connector with JSON and binary-serialized object passing
