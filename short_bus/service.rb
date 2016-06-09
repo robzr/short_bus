@@ -94,9 +94,9 @@ module ShortBus
       debug_message "[#{@name}]#run_service(#{message}) -> #{@service.class.name} ##{@service.arity}"
       if @service.is_a?(Proc) || @service.is_a?(Method)
         if @service.arity == 0
-          @driver.publish_from(@name, @service.call)
+          @driver.publish(@name, @service.call)
         elsif [1, -1, -2].include? @service.arity
-          @driver.publish_from(@name, @service.call(message))
+          @driver.publish(@name, @service.call(message))
         else
           raise ArgumentError, "Service invalid arg count: #{@service.class.name}"
         end
