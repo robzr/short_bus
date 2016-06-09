@@ -50,27 +50,31 @@ module ShortBus
     def service_thread
       Thread.new do 
         begin
-          loop { run_service @run_queue.shift }
+          run_service @run_queue.shift until Thread.current.key?(:stop) 
         rescue Exception => exc
           puts "Service [#{@name}] => #{exc.inspect}" unless @suppress_exception
-          #debug_message "[#{@name}]service_thread => #{exc.inspect}"
           abort if exc.is_a? SystemExit
-          retry
+          retry unless Thread.current.key?(:stop)
         end 
       end 
     end
 
     def start
-      #@threads.delete_if { |thread| !thread.alive? }
       @threads << service_thread while @threads.length < @thread_count
     end
 
-    def stop
+    def stop(when_to_kill=nil)
+      @threads.each do |thread|
+        when_to_kill == :now ? thread.kill : thread[:stop] = true
+      end
       @threads.each_index do |index|
-        @threads[index].kill
         @threads[index].join
         @threads.delete index
       end
+    end
+
+    def stop!
+      stop :now
     end
 
     def to_s
