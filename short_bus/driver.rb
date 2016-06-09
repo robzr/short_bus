@@ -12,7 +12,8 @@ module ShortBus
       debug: false,
       default_message_spec: nil,
       default_publisher_spec: nil,
-      default_thread_count: 1
+      default_thread_count: 1,
+      max_message_queue_size: 1_000_000,
     }
 
     def initialize(*options)
@@ -20,7 +21,7 @@ module ShortBus
       @options.merge! options[0] if options[0].is_a?(Hash)
       @debug = @options[:debug]
 
-      @messages = Queue.new
+      @messages = SizedQueue.new(@options[:max_message_queue_size])
       @services = {}
       @threads = { message_router: launch_message_router }
     end

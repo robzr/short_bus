@@ -12,6 +12,7 @@ module ShortBus
     def initialize(
       debug: false,
       driver: nil,
+      max_run_queue_size: 1_000_000,
       message_spec: nil,
       name: nil,
       recursive: false,
@@ -29,7 +30,7 @@ module ShortBus
       @thread_count = thread_count
 
       @name = name || @service.to_s || OpenSSL::HMAC.new(rand.to_s, 'sha1').to_s
-      @run_queue = Queue.new
+      @run_queue = SizedQueue.new(max_run_queue_size)
       @threads = []
       start
     end
