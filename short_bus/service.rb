@@ -65,12 +65,19 @@ module ShortBus
 
     def stop(when_to_kill=nil)
       @threads.each do |thread|
-        when_to_kill == :now ? thread.kill : thread[:stop] = true
+        if when_to_kill.is_a? Numeric
+          begin
+            Timeout.timeout(when_to_kill) { stop }
+          rescue Timeout::Error
+            stop :now
+          end
+        elsif when_to_kill == :now   
+          thread.kill
+        else
+          thread[:stop] = true
+        end
       end
-      @threads.each_index do |index|
-        @threads[index].join
-        @threads.delete index
-      end
+      @threads.delete_if { |thread| @threads[index].join }
     end
 
     def stop!
