@@ -2,17 +2,18 @@ require 'pp'
 require 'timeout'
 
 # Queue, with a few mods
-#  - name (message.to_s) (string)
+#  - message (message.to_s) (string)
 #  - optional payload (object)
 #  - publisher (string or nil = anonymous)
 #
 module ShortBus
   class Message < Queue
-    attr_reader :payload
     attr_accessor :publisher
+    attr_reader :payload
 
     def initialize(*args)
       @message, @payload, @publisher = nil
+      @semaphore = Mutex.new
       if populate args
         super()
       else
@@ -28,6 +29,10 @@ module ShortBus
           payload: arg_hash.has_key?(:payload) ? arg_hash[:payload] : @payload,
         )
       end
+    end
+
+    def payload=(arg)
+      @semaphore.synchronize { @payload = arg }
     end
 
     def pop(time_out=nil)

@@ -5,7 +5,7 @@ require_relative '../short_bus'
 
 driver = ShortBus::Driver.new(debug: false)
 
-#monitor = ShortBus::Monitor.new driver
+monitor = ShortBus::Monitor.new driver
 
 driver.subscribe(
   name: 'lambie',
@@ -34,7 +34,8 @@ driver.subscribe(
   puts "inline_bob received: #{message} from #{message.publisher}"
   puts "            payload: #{message.payload}" if message.payload
   message << 'arbitrary object sent via Message'
-  'new::message'
+  message.payload += 1 if message.payload.is_a?(Numeric)
+  message.merge 'new::message'
 end
 
 Thread.new { 
@@ -44,7 +45,7 @@ Thread.new {
   end
 }
 
-first_message = driver << ["hi::bob", "potato"]
+first_message = driver << ["hi::bob", 1]
 sleep 0.2
 driver << ["hello::jim", "pot"]
 sleep 0.2

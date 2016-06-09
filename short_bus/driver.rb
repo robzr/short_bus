@@ -42,6 +42,7 @@ module ShortBus
       @services[service.to_s] = service
     end
 
+    # TODO: merge publish/publish_from with from being a default arg
     def publish(arg)
       if message = convert_to_message(arg)
         @messages.push message
@@ -50,6 +51,14 @@ module ShortBus
     end
 
     alias_method :<<, :publish
+
+    def publish_from(publisher, arg)
+      if message = convert_to_message(arg)
+        message.publisher = publisher
+        @messages.push message
+        message
+      end
+    end
 
     def unsubscribe(service)
       if service.is_a? ShortBus::Service
