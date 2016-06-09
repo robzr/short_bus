@@ -35,7 +35,7 @@ module ShortBus
     end
     
     def check(message, dry_run=false)
-      debug_message "[#{@name}]#check(#{message})"
+      debug_message "[#{@name}]#check(#{message})#{' dry_run' if dry_run}#" 
       if(
         (!@message_spec || @message_spec.match(message.to_s)) &&
         (!@publisher_spec || @publisher_spec.match(message.publisher)) &&

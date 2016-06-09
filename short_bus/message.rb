@@ -12,11 +12,21 @@ module ShortBus
     attr_accessor :publisher
 
     def initialize(*args)
-      @name, @payload, @publisher = nil
-      if process_args args
+      @message, @payload, @publisher = nil
+      if populate args
         super()
       else
         raise ArgumentError.new "#Message: Invalid args #{args.pretty_inspect}"
+      end
+    end
+
+    def merge(*args)
+      arg_hash = process_args args
+      if arg_hash[:message] 
+        Message.new(
+          message: arg_hash[:message] || @message,
+          payload: arg_hash.has_key?(:payload) ? arg_hash[:payload] : @payload,
+        )
       end
     end
 
@@ -35,23 +45,34 @@ module ShortBus
     alias_method :deq, :pop
 
     def to_s
-      @name
+      @message
     end
 
     private
 
+    def populate(args)
+      arg_hash = process_args args
+      if arg_hash.has_key?(:message)
+        @payload = arg_hash[:payload] if arg_hash.has_key?(:payload)
+        @publisher = arg_hash[:publisher] if arg_hash.has_key?(:publisher)
+        @message = arg_hash[:message]
+      end
+    end
+
     def process_args(args)
-      if args.is_a?(Array) && args.length > 0
-        if args[0].is_a? Array
-          process_args args[0]
-        elsif args[0].is_a? String
-          @payload = args[1] if args.length == 2
-          @payload = args.slice(1..-1) if args.length > 2
-          @name = args[0]
-        elsif args[0].is_a?(Hash) && args[0].has_key?(:message)
-          @payload = args[0][:payload] if args[0].has_key?(:payload)
-          @publisher = args[0][:publisher] if args[0].has_key?(:publisher)
-          @name = args[0][:message]
+      if args[0].is_a? Array
+        process_args args[0]
+      else
+        {}.tap do |me|
+          if args[0].is_a? String
+            me[:payload] = args[1] if args.length == 2
+            me[:payload] = args.slice(1..-1) if args.length > 2
+            me[:message] = args[0]
+          elsif args[0].is_a?(Hash) && args[0].has_key?(:message)
+            me[:payload] = args[0][:payload] if args[0].has_key?(:payload)
+            me[:publisher] = args[0][:publisher] if args[0].has_key?(:publisher)
+            me[:message] = args[0][:message]
+          end
         end
       end
     end
