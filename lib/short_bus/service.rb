@@ -1,4 +1,4 @@
-require 'observer'
+#require 'observer'
 require 'pp'
 require 'set'
 require 'openssl'
