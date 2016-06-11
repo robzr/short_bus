@@ -7,6 +7,8 @@ require 'timeout'
 #  - publisher (string or nil = anonymous)
 #
 module ShortBus
+  ##
+  # ShortBus::Message is the object which is published & received by services
   class Message < Queue
     attr_accessor :publisher
     attr_reader :payload
@@ -17,16 +19,16 @@ module ShortBus
       if populate args
         super()
       else
-        raise ArgumentError.new "#Message: Invalid args #{args.pretty_inspect}"
+        raise ArgumentError, "#Message: Invalid args #{args.pretty_inspect}"
       end
     end
 
     def merge(*args)
       arg_hash = process_args args
-      if arg_hash[:message] 
+      if arg_hash[:message]
         Message.new(
           message: arg_hash[:message] || @message,
-          payload: arg_hash.has_key?(:payload) ? arg_hash[:payload] : @payload,
+          payload: arg_hash.key?(:payload) ? arg_hash[:payload] : @payload
         )
       end
     end
@@ -35,7 +37,7 @@ module ShortBus
       @semaphore.synchronize { @payload = arg }
     end
 
-    def pop(time_out=nil)
+    def pop(time_out = nil)
       if time_out.is_a? Numeric
         begin
           Timeout.timeout(time_out) { super() }
@@ -46,8 +48,8 @@ module ShortBus
       end
     end
 
-    alias_method :shift, :pop
-    alias_method :deq, :pop
+    alias shift pop
+    alias deq pop
 
     def to_s
       @message
@@ -57,9 +59,9 @@ module ShortBus
 
     def populate(args)
       arg_hash = process_args args
-      if arg_hash.has_key?(:message)
-        @payload = arg_hash[:payload] if arg_hash.has_key?(:payload)
-        @publisher = arg_hash[:publisher] if arg_hash.has_key?(:publisher)
+      if arg_hash.key?(:message)
+        @payload = arg_hash[:payload] if arg_hash.key?(:payload)
+        @publisher = arg_hash[:publisher] if arg_hash.key?(:publisher)
         @message = arg_hash[:message]
       end
     end
@@ -73,9 +75,9 @@ module ShortBus
             me[:payload] = args[1] if args.length == 2
             me[:payload] = args.slice(1..-1) if args.length > 2
             me[:message] = args[0]
-          elsif args[0].is_a?(Hash) && args[0].has_key?(:message)
-            me[:payload] = args[0][:payload] if args[0].has_key?(:payload)
-            me[:publisher] = args[0][:publisher] if args[0].has_key?(:publisher)
+          elsif args[0].is_a?(Hash) && args[0].key?(:message)
+            me[:payload] = args[0][:payload] if args[0].key?(:payload)
+            me[:publisher] = args[0][:publisher] if args[0].key?(:publisher)
             me[:message] = args[0][:message]
           end
         end

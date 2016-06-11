@@ -1,9 +1,10 @@
-#require 'observer'
 require 'pp'
 require 'set'
 require 'openssl'
 
 module ShortBus
+  ##
+  # ShortBus::Service tracks a registered service (subscriber)
   class Service
     include DebugMessage
 
@@ -17,7 +18,7 @@ module ShortBus
       name: nil,
       recursive: false,
       publisher_spec: nil,
-      service: nil, 
+      service: nil,
       suppress_exception: false,
       thread_count: 1
     )
@@ -27,6 +28,7 @@ module ShortBus
       @recursive = recursive
       @publisher_spec = publisher_spec ? Spec.new(publisher_spec) : nil
       @service = service
+      @suppress_exception = suppress_exception
       @thread_count = thread_count
 
       @name = name || @service.to_s || OpenSSL::HMAC.new(rand.to_s, 'sha1').to_s
@@ -34,9 +36,9 @@ module ShortBus
       @threads = []
       start
     end
-    
-    def check(message, dry_run=false)
-      debug_message "[#{@name}]#check(#{message})#{' dry_run' if dry_run}#" 
+
+    def check(message, dry_run = false)
+      debug_message "[#{@name}]#check(#{message})#{' dry_run' if dry_run}#"
       if(
         (!@message_spec || @message_spec.match(message.to_s)) &&
         (!@publisher_spec || @publisher_spec.match(message.publisher)) &&
@@ -49,22 +51,22 @@ module ShortBus
     # TODO: consider some mechanism to pass Exceptions up to the main thread,
     #   perhaps with a whitelist, optional logging, something clean.
     def service_thread
-      Thread.new do 
+      Thread.new do
         begin
-          run_service @run_queue.shift until Thread.current.key?(:stop) 
+          run_service @run_queue.shift until Thread.current.key?(:stop)
         rescue Exception => exc
           puts "Service [#{@name}] => #{exc.inspect}" unless @suppress_exception
           abort if exc.is_a? SystemExit
           retry unless Thread.current.key?(:stop)
-        end 
-      end 
+        end
+      end
     end
 
     def start
       @threads << service_thread while @threads.length < @thread_count
     end
 
-    def stop(when_to_kill=nil)
+    def stop(when_to_kill = nil)
       @threads.each do |thread|
         if when_to_kill.is_a? Numeric
           begin
@@ -72,13 +74,13 @@ module ShortBus
           rescue Timeout::Error
             stop :now
           end
-        elsif when_to_kill == :now   
+        elsif when_to_kill == :now
           thread.kill
         else
           thread[:stop] = true
         end
       end
-      @threads.delete_if { |thread| @threads[index].join }
+      @threads.delete_if(&:join)
     end
 
     def stop!
@@ -95,9 +97,9 @@ module ShortBus
       debug_message "[#{@name}]#run_service(#{message}) -> #{@service.class.name} ##{@service.arity}"
       if @service.is_a?(Proc) || @service.is_a?(Method)
         if @service.arity == 0
-          @driver.publish(@name, @service.call)
+          @driver.publish(@service.call, @name)
         elsif [1, -1, -2].include? @service.arity
-          @driver.publish(@name, @service.call(message))
+          @driver.publish(@service.call(message), @name)
         else
           raise ArgumentError, "Service invalid arg count: #{@service.class.name}"
         end

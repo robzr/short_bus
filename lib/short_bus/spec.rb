@@ -2,6 +2,8 @@ require 'pp'
 require 'set'
 
 module ShortBus
+  ##
+  # Used for message_specs and publisher_specs
   class Spec
     attr_reader :specs
 
@@ -18,7 +20,7 @@ module ShortBus
     end
 
     def match(item)
-      @specs.reduce(false) { |acc, spec| acc || match_single(spec, item) }
+      @specs.reduce(false) { |a, e| a || match_single(e, item) }
     end
 
     private
@@ -38,8 +40,8 @@ module ShortBus
         to_set ? [spec].to_set : spec
       elsif spec.is_a? Set
         spec.flatten
-          .map { |spec| process(spec, false) }
-          .to_set
+            .map { |spec| process(spec, false) }
+            .to_set
       elsif spec.is_a? String
         to_set ? [string_to_regexp(spec)].to_set : string_to_regexp(spec)
       elsif spec.is_a? NilClass

@@ -2,6 +2,8 @@ require 'pp'
 require 'set'
 
 module ShortBus
+  ##
+  # ShorBus::Driver is the message dispatcher itself.
   class Driver
     include DebugMessage
 
@@ -13,8 +15,8 @@ module ShortBus
       default_message_spec: nil,
       default_publisher_spec: nil,
       default_thread_count: 1,
-      max_message_queue_size: 1_000_000,
-    }
+      max_message_queue_size: 1_000_000
+    }.freeze
 
     def initialize(*options)
       @options = DEFAULT_DRIVER_OPTIONS
@@ -34,7 +36,7 @@ module ShortBus
         name: nil,
         publisher_spec: @options[:default_publisher_spec],
         service: nil,
-        thread_count: @options[:default_thread_count],
+        thread_count: @options[:default_thread_count]
       }.merge args[0].is_a?(Hash) ? args[0] : { service: args[0] }
 
       service_args[:service] = block.to_proc if block_given?
@@ -43,25 +45,24 @@ module ShortBus
       @services[service.to_s] = service
     end
 
-    def publish(publisher=nil, arg)
-      if message = convert_to_message(arg)
-        message.publisher = publisher if publisher
-        @messages.push message
-        message
-      end
+    def publish(arg, publisher = nil)
+      return unless (message = convert_to_message arg)
+      message.publisher = publisher if publisher
+      @messages.push message
+      message
     end
 
-    alias_method :<<, :publish
+    alias << publish
 
     def unsubscribe(service)
       if service.is_a? ShortBus::Service
         unsubscribe service.to_s
-      elsif @services.has_key? service
+      elsif @services.key?(service)
         @services[service].stop
         @services.delete service
-      end      
+      end
     end
-    
+
     private
 
     def convert_to_message(arg)
@@ -71,16 +72,16 @@ module ShortBus
         Message.new(arg)
       elsif arg.is_a?(Array) && arg[0].is_a?(String)
         Message.new(arg)
-      elsif arg.is_a?(Hash) && arg.has_key?(:message) && arg[:message]
-        publisher = arg.has_key?(:publisher) ? arg[:publisher] : nil
-        payload = arg.has_key?(:payload) ? arg[:payload] : nil
+      elsif arg.is_a?(Hash) && arg.key?(:message) && arg[:message]
+        publisher = arg.key?(:publisher) ? arg[:publisher] : nil
+        payload = arg.key?(:payload) ? arg[:payload] : nil
         Message.new(message: arg[:message], payload: payload, publisher: publisher)
       end
     end
 
     def launch_message_router
       Thread.new do
-        loop do 
+        loop do
           message = @messages.shift
           debug_message "route_message(#{message})"
           @services.values.each { |service| service.check message }
@@ -89,4 +90,3 @@ module ShortBus
     end
   end
 end
-
