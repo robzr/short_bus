@@ -7,11 +7,11 @@ require 'short_bus'
 driver = ShortBus::Driver.new
 
 def house_cleaner(message)
-  puts "Lets blow this popsicle stand..." 
+  puts 'Lets blow this popsicle stand...'
   sleep 0.5
 
   # Send value back into the Message object
-  message << "I'm working on it!"
+  message << 'I\'m working on it!'
 
   # pause
   sleep 1
