@@ -2,7 +2,7 @@
 #
 # ShortBus example passing return values via Message object
 
-require_relative '../short_bus'
+require 'short_bus'
 
 driver = ShortBus::Driver.new
 

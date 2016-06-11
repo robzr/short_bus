@@ -2,7 +2,7 @@
 #
 # First example - basic publishing / subscription
 #
-require_relative '../short_bus'
+require 'short_bus'
 
 # Instantiate Driver, start message routing thread
 #
