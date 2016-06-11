@@ -1,10 +1,10 @@
 # ShortBus
-Easy to use multi-threaded pub-sub message dispatcher for implementing self-contained service-oriented Ruby apps.
+Lightweight multi-threaded pub-sub message dispatcher for implementing self-contained service-oriented Ruby apps.
 
 ## What does it do?
-The goal is to provide a minimal, lightweight message dispatcher/service API, with multi-threaded message publishing and subscription for Ruby closures (Lambdas/Blocks) and Methods.
+The goal is to provide a lightweight message dispatcher/service API, with multi-threaded message publishing and subscription for closures (Lambdas/Blocks) and Methods.
 
-ShortBus has no dependencies outside of the Ruby Core & Standard Libraries.
+ShortBus has no dependencies outside of the Ruby Core & Standard Libraries, and has less than 300 lines of code.
 
 ## What are the components?
 A service is a participant in the SOA (Service Oriented Architecture) for publishing and/or subscribing to messages. To receive messages, the service subscribes to the Driver (Driver#subscribe); and is run as a callback in a dedicated thread or thread pool.
