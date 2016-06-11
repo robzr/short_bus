@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'pp'
-require_relative '../short_bus'
+require 'short_bus'
 
 driver = ShortBus::Driver.new(debug: false)
 
