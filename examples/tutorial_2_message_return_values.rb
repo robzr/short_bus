@@ -21,12 +21,12 @@ def house_cleaner(message)
 end
 
 driver.subscribe(
-  message_spec: '*::Shutdown',
+  message_spec: '*/Shutdown',
   service: method(:house_cleaner)
 )
 
 # driver.publish returns the message object we just sent
-our_message = driver.publish('Everyone::Shutdown')
+our_message = driver.publish('Everyone/Shutdown')
 
 # Since it is inherited from a Queue, we can pop right off it
 return_value = our_message.shift

@@ -12,7 +12,7 @@ driver.subscribe(
   service: lambda do |_message|
     sleep 0.2
     raise StandardError, 'random explosion' if rand(4) == 0
-    'lambie::response'
+    'lambie/response'
   end
 )
 
@@ -35,21 +35,21 @@ driver.subscribe(
   puts "            payload: #{message.payload}" if message.payload
   message << 'arbitrary object sent via Message'
   message.payload += 1 if message.payload.is_a?(Numeric)
-  message.merge 'new::message'
+  message.merge 'new/message'
 end
 
 Thread.new do
   5.times do
-    driver << 'publish::thread'
+    driver << 'publish/thread'
     sleep 0.15
   end
 end
 
-first_message = driver << ['hi::bob', 1]
+first_message = driver << ['hi/bob', 1]
 sleep 0.2
-driver << ['hello::jim', 'pot']
+driver << ['hello/jim', 'pot']
 sleep 0.2
-driver << ['hola::xxx', 'stew']
+driver << ['hola/xxx', 'stew']
 
 puts "Shift-back from first message #{first_message.shift(2)}"
 

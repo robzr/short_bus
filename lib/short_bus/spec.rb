@@ -51,7 +51,7 @@ module ShortBus
 
     def string_to_regexp(spec)
       if spec.include? '*'
-        /^#{spec.gsub(/\*+/, '*' => '[^:]*', '**' => '.*')}/
+        /^#{spec.gsub(/\*+/, '*' => '[^/]*', '**' => '.*')}/
       else
         spec
       end

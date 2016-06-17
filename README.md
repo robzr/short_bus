@@ -19,11 +19,11 @@ In it's simplest form, a message can be a simple String like `'shutdown'`, but t
 A message\_spec can be supplied when subscribing in order to select which messages are received (ie: run the callback). A message\_spec can be a String (`'shutdown'`), a wildcard String (`'OwnerService::**'`), a Regexp, or even an Array or Set of multiple Strings and/or Regexps.
 
 #### Wildcard String?
-To simplify filtering, a message\_spec String can contain a `*` or a `**` wildcard. A `*` wildcard matches just one field between `::` delimiters. A `**` wildcard matches one or more.
+To simplify filtering, a message\_spec String can contain a `*` or a `**` wildcard. A `*` wildcard matches just one field between `/` delimiters. A `**` wildcard matches one or more.
 
-`'Service::*'` matches `'Service::Start'`, but not `'Service::Start::Now'`
+`'Service/*'` matches `'Service/Start'`, but not `'Service/Start/Now'`
 
-`'Service::**'` matches both `'Service::Start'` and `'Service::Start::Now'`
+`'Service/**'` matches both `'Service/Start'` and `'Service/Start/Now'`
 
 Wilcard Strings are turned into Regexps by the Driver.
 
@@ -35,7 +35,7 @@ When a new Message is published via the Driver#publish method, the return value 
 The publisher can then #pop from that Message, which will block and wait for one of the subscribers to #push a "return value" into the Message on the other side. To make things more flexible, #pop (and #shift, #deq) has been extended to accept a numeric value, which acts as a timeout in seconds.
 
 ```ruby
-return_val = driver.publish('Testing::Message')
+return_val = driver.publish('Testing/Message')
   .pop(3)
 ```
 
@@ -57,38 +57,38 @@ driver.subscribe { |message| puts "1. I like all foods, including #{message}" }
 # Subscribes a block with a message_spec filtering only some messages
 #   Also, replies back to the driver with a new message.
 #
-driver.subscribe(message_spec: 'Chocolate::**') do |message|
+driver.subscribe(message_spec: 'Chocolate/**') do |message|
   puts "2. Did I hear you say Chocolate?  (#{message}). I know what I'm making."
-  'Chocolate::And::Strawberries'
+  'Chocolate/And/Strawberries'
 end
 
 # Subscribes a block with a message_spec filtering only some messages
 #
-driver.subscribe(message_spec: '**::Strawberries') do |message|
+driver.subscribe(message_spec: '**/Strawberries') do |message|
   puts "3. I only care about Strawberries: #{message}"
   'Strawberries'
 end
 
 # First lets just test it with an unrelated message
 #
-driver.publish 'Cookies::And::Cream'
+driver.publish 'Cookies/And/Cream'
 sleep 0.1
 puts
 
 # Now lets try some interaction going between services
 #
-driver.publish 'Chocolate::Anything'
+driver.publish 'Chocolate/Anything'
 sleep 0.1
 ```
 And here's what it looks like when we run it:
 
 ```
-1. I like all foods, including Cookies::And::Cream
+1. I like all foods, including Cookies/And/Cream
 
-1. I like all foods, including Chocolate::Anything
-2. Did I hear you say Chocolate?  (Chocolate::Anything). I know what I'm making.
-1. I like all foods, including Chocolate::And::Strawberries
-3. I only care about Strawberries: Chocolate::And::Strawberries
+1. I like all foods, including Chocolate/Anything
+2. Did I hear you say Chocolate?  (Chocolate/Anything). I know what I'm making.
+1. I like all foods, including Chocolate/And/Strawberries
+3. I only care about Strawberries: Chocolate/And/Strawberries
 1. I like all foods, including Strawberries
 ```
 
