@@ -3,7 +3,7 @@ require 'set'
 
 module ShortBus
   ##
-  # ShorBus::Driver is the message dispatcher itself.
+  # ShorBus::Driver is the message dispatcher.
   class Driver
     include DebugMessage
 
@@ -18,6 +18,10 @@ module ShortBus
       max_message_queue_size: 1_000_000
     }.freeze
 
+    # Example:
+    #
+    # Arguments:
+    #   options: hash 
     def initialize(*options)
       @options = DEFAULT_DRIVER_OPTIONS
       @options.merge! options[0] if options[0].is_a?(Hash)
@@ -28,6 +32,11 @@ module ShortBus
       @threads = { message_router: launch_message_router }
     end
 
+    # Subscribes a callback (lamba, block, method) to receive messages
+    #
+    # @param [*args]
+    # @return [ShortBus::Service] Service object that was created and registered
+    #
     def subscribe(*args, &block)
       service_args = {
         debug: @debug,
