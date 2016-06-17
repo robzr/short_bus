@@ -14,9 +14,9 @@ A message (as simple as a String, but ultimately converted to a ShortBus::Messag
 The Driver (ShortBus::Driver) is the brains of the operation. Once instantiated, a dedicated thread monitors the incoming queue, converts and routes the messages to the appropriate subscribers based on the message\_spec(s) supplied at the time of subscription.
 
 ## What does a message and a message\_spec look like?
-In it's simplest form, a message can be a simple String like `'shutdown'`, but typically a more flexible, component based format is used, delimited by `::`, like `'OwnerService::Action::Argument'`.  The Driver will convert the message String into a ShortBus::Message object before routing.
+In it's simplest form, a message can be a simple String like `'shutdown'`, but typically a more flexible, component based format is used, delimited by `/`, like `'OwnerService/Action/Argument'`.  The Driver will convert the message String into a ShortBus::Message object before routing.
 
-A message\_spec can be supplied when subscribing in order to select which messages are received (ie: run the callback). A message\_spec can be a String (`'shutdown'`), a wildcard String (`'OwnerService::**'`), a Regexp, or even an Array or Set of multiple Strings and/or Regexps.
+A message\_spec can be supplied when subscribing in order to select which messages are received (ie: run the callback). A message\_spec can be a String (`'shutdown'`), a wildcard String (`'OwnerService/**'`), a Regexp, or even an Array or Set of multiple Strings and/or Regexps.
 
 #### Wildcard String?
 To simplify filtering, a message\_spec String can contain a `*` or a `**` wildcard. A `*` wildcard matches just one field between `/` delimiters. A `**` wildcard matches one or more.
